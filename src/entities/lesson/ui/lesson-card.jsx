@@ -6,14 +6,16 @@ import { shortRoom, shortTeacher } from '@/shared/lib/text';
 const ICONS = { lecture:BookOpen,practice:Users,lab:FlaskConical,seminar:ClipboardList,exam:GraduationCap,other:Microscope };
 
 function RoomButton({room,onRoom}) {
-  return <button className="inline-room" title={room} onClick={()=>onRoom(room)}><MapPin size={15} aria-hidden="true"/><span>ауд. {shortRoom(room)}</span></button>;
+  return <button className="inline-room" title={room} aria-label={`Открыть расписание аудитории: ${room || 'не указана'}`} onClick={()=>room&&onRoom(room)}><MapPin size={15} aria-hidden="true"/><span>ауд. {shortRoom(room)}</span></button>;
 }
 
 export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
   const { main, items, time } = card;
   const type = lessonCategory(main.type);
   const Icon = ICONS[type.key] || ClipboardList;
-  const multiple = items.length > 1 && items.some(item=>item.subgroup);
+  const hasSubgroups = items.some(item=>item.subgroup);
+  // Do not silently hide other concurrent records when upstream subgroup field is empty.
+  const multiple = items.length > 1 || hasSubgroups;
   return <article className={`lesson-card type-${type.key}`} aria-label={`${main.subject}, ${type.label}, ${time[0]} ${time[1]}`}>
     <div className="lesson-time" aria-label={`С ${time[0]} до ${time[1]}`}>
       <span>{time[0]}</span><span>{time[1]}</span>
@@ -23,11 +25,11 @@ export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
       <div className="lesson-title">{main.subject}</div>
       {multiple ? <div className="subgroups">
         {items.map((entry,i)=><div className="subgroup" key={`${entry.teacher}-${entry.room}-${i}`}>
-          <span className="subgroup-index">{entry.subgroup ? `${entry.subgroup} подгруппа` : `Подгруппа ${i+1}`}</span>
+          <span className="subgroup-index">{entry.subgroup ? `${entry.subgroup} подгруппа` : items.length>1 ? `Параллельно ${i+1}` : 'Подгруппа'}</span>
           <div className="subgroup-meta">
             <button title={entry.teacher} className="inline-person" onClick={()=>mode==='teacher'?onGroup(entry.group):onTeacher(entry.teacher)}>
               {mode==='teacher'?<Users size={15} aria-hidden="true"/>:<UserRound size={15} aria-hidden="true"/>}
-              <span>{mode==='teacher'?entry.group:shortTeacher(entry.teacher)}</span>
+              <span data-long={String(mode==='teacher'?entry.group:shortTeacher(entry.teacher)).length>25}>{mode==='teacher'?entry.group:shortTeacher(entry.teacher)}</span>
             </button>
             <RoomButton room={entry.room} onRoom={onRoom}/>
           </div>
@@ -35,7 +37,7 @@ export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
       </div> : <div className="lesson-meta">
         <button className="inline-person" title={mode==='teacher'?main.group:main.teacher} onClick={()=>mode==='teacher'?onGroup(main.group):onTeacher(main.teacher)}>
           {mode==='teacher'?<Users size={15} aria-hidden="true"/>:<UserRound size={15} aria-hidden="true"/>}
-          <span>{mode==='teacher'?main.group:shortTeacher(main.teacher)}</span>
+          <span data-long={String(mode==='teacher'?main.group:shortTeacher(main.teacher)).length>25}>{mode==='teacher'?main.group:shortTeacher(main.teacher)}</span>
         </button>
         <RoomButton room={main.room} onRoom={onRoom}/>
       </div>}

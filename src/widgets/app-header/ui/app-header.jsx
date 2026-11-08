@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/features/theme-switch/ui/theme-toggle';
 
 const VIEWS = [ ['group','Группа'], ['teacher','Преподаватель'], ['room','Аудитория'] ];
 
-export function AppHeader({ kind, selected, theme, isFavorite, onKind, onSearch, onTheme, onFavorite, onFavorites }) {
+export function AppHeader({ kind, selected, theme, preference, isFavorite, onKind, onSearch, onTheme, onFavorite, onFavorites }) {
   return <header className="app-header">
     <div className="brand-row">
       <div className="brand">
@@ -14,7 +14,7 @@ export function AppHeader({ kind, selected, theme, isFavorite, onKind, onSearch,
       <div className="header-actions">
         <button className="icon-button" title="Поиск" aria-label="Открыть поиск" onClick={onSearch}><Search size={21}/></button>
         <button className="icon-button" title="Избранное" aria-label="Открыть избранное" onClick={onFavorites}><Bookmark size={21}/></button>
-        <ThemeToggle theme={theme} onToggle={onTheme}/>
+        <ThemeToggle theme={theme} preference={preference} onSelect={onTheme}/>
       </div>
     </div>
     <div className="subject-row">

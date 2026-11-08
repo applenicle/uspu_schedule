@@ -17,7 +17,7 @@ export function ScheduleView({lessons,selected,mode,onTeacher,onGroup,onRoom,onD
     {sourceUpdated&&<div className="sync-label"><RefreshCw size={13}/>Источник обновлён: {sourceUpdated}</div>}
     {pending&&<div className="pending-label" role="status">Расписание ещё синхронизируется. Повторите проверку через несколько минут.</div>}
     <div className="mobile-lessons">{loading?<div className="loading-label" role="status">Получаем занятия…</div>:
-      cards.length?cards.map(card=><LessonCard key={card.key} card={card} mode={mode} onTeacher={onTeacher} onGroup={onGroup} onRoom={onRoom}/>):<EmptyDay onNext={()=>onDay(shiftISO(selected,1))}/>}</div>
+      cards.length?cards.map(card=><LessonCard key={card.key} card={card} mode={mode} onTeacher={onTeacher} onGroup={onGroup} onRoom={onRoom}/>):pending?<div className="loading-label" role="status">Ждём обновления расписания. Данные появятся автоматически.</div>:<EmptyDay onNext={()=>onDay(shiftISO(selected,1))}/>}</div>
     <div className="week-grid" aria-label="Недельное расписание">
       {week.map(day=>{
         const ch=dateChip(day);

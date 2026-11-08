@@ -21,11 +21,10 @@ export function TeacherSheet({ teacher, lessons, onClose, onOpen }) {
         return <div className="teacher-lesson" key={`${row.date}${row.time}${i}`}>
           <span className="teacher-lesson-date"><CalendarDays size={18}/>{fullDate(row.date)} · {time[0]}</span>
           <span className="teacher-lesson-subject">{row.subject}</span>
-          <div className="teacher-lesson-bottom"><span><Users size={16}/>{row.group||'Группа не указана'}</span><span><MapPin size={16}/>ауд. {shortRoom(row.room)}</span></div>
+          <div className="teacher-lesson-bottom"><span><Users size={16}/>{row.group||'Группа не указана'}</span><span title={row.room} aria-label={`Аудитория: ${row.room||'не указана'}`}><MapPin size={16}/>ауд. {shortRoom(row.room)}</span></div>
         </div>;
       })}</div>:<p className="teacher-empty">Для этого преподавателя пока нет загруженных занятий. Откройте полное расписание.</p>}
       <button className="primary-action" onClick={onOpen}>Открыть полное расписание <ArrowUpRight size={19}/></button>
-      <p className="muted-note">Контактные данные и фотографии не добавлены: источник расписания их не предоставляет.</p>
     </section>
   </div>;
 }

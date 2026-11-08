@@ -41,3 +41,18 @@ test('teacher name and rooms preserve meaningful strings',()=>{
 test('first day on Sunday selects upcoming classes',()=>{
   assert.equal(nearestTeachingDay(demoLessons('2026-11-08'),'2026-11-08'),'2026-11-09');
 });
+
+test('long source room names are shortened without losing the room code',()=>{
+  assert.equal(shortRoom('11-309, Учебная аудитория декоративно-прикладного искусства'),'11-309');
+  assert.equal(shortRoom('ГУК: Кабинет 214, учебная аудитория'),'214');
+  assert.equal(shortRoom('дистант: Виртуальная аудитория'),'дистант: Виртуальная аудитория');
+});
+test('parallel records without subgroup metadata are not discarded',()=>{
+  const rows=[
+    {date:'2026-11-09',time:'10:15 - 11:45',subject:'Проект',type:'Практ.зан-я',teacher:'А',room:'301',subgroup:''},
+    {date:'2026-11-09',time:'10:15 - 11:45',subject:'Проект',type:'Практ.зан-я',teacher:'Б',room:'302',subgroup:''}
+  ];
+  const cards=lessonsToCards(rows,'2026-11-09');
+  assert.equal(cards.length,1);
+  assert.equal(cards[0].items.length,2);
+});

@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
+import Script from 'next/script';
 import { CalendarDays, Search, Bookmark, AlertCircle } from 'lucide-react';
 import { AppHeader } from '@/widgets/app-header/ui/app-header';
 import { ScheduleView } from '@/widgets/schedule-view/ui/schedule-view';
@@ -13,12 +14,15 @@ import { normalizeGroup } from '@/shared/lib/schedule-utils.mjs';
 import { todayYekaterinburg } from '@/shared/lib/date';
 import { getSchedule, requestSchedule } from '@/entities/schedule/api/schedule-api';
 import { queryCatalog } from '@/entities/catalog/api/catalog-api';
+import { teacherSurname, uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
+import { useDeviceTheme } from '@/features/theme-switch/model/use-device-theme';
 
 export function SchedulePage() {
   const [demo,setDemo]=useState(false);
-  const [theme,setTheme]=useState('light');
+  const { theme, preference, selectPreference } = useDeviceTheme();
   const [kind,setKind]=useState('group');
   const [searchKind,setSearchKind]=useState('group');
+  const [searchTerm,setSearchTerm]=useState('');
   const [selected,setSelected]=useState(null);
   const [today,setToday]=useState('2026-11-08');
   const [day,setDay]=useState('2026-11-08');
@@ -36,7 +40,6 @@ export function SchedulePage() {
     const inDemo=url.searchParams.get('demo')==='1';
     setDemo(inDemo);
     const date=todayYekaterinburg();setToday(date);setDay(date);
-    try {setTheme(localStorage.getItem('uspu:theme')==='dark'?'dark':'light');}catch{}
     if(inDemo) setSelected(demoCatalog.find(x=>x.kind==='group'&&x.id==='ДГ-304'));
     else {
       try {
@@ -45,10 +48,6 @@ export function SchedulePage() {
       } catch {}
     }
   },[]);
-  useEffect(()=>{
-    document.documentElement.dataset.theme=theme;
-    try{localStorage.setItem('uspu:theme',theme);}catch{}
-  },[theme]);
 
   const load = useCallback(async (signal)=>{
     if(!selected) {setLessons([]);return;}
@@ -75,28 +74,40 @@ export function SchedulePage() {
     if(!selected||demo) return;
     try {localStorage.setItem('uspu:selected',JSON.stringify(selected));}catch{}
   },[selected,demo]);
-  function choose(item) {setKind(item.kind);setSearchKind(item.kind);setSelected(item);setDialog(null);setTeacher('');setDay(today);}
+  function choose(item) {setKind(item.kind);setSearchKind(item.kind);setSelected(item);setDialog(null);setTeacher('');setSearchTerm('');setDay(today);}
   function selectKind(value) {
-    setSearchKind(value);setDialog('search');setTeacher('');
+    setSearchKind(value);setSearchTerm('');setDialog('search');setTeacher('');
   }
   async function resolveAndChoose(nextKind,label){
     setError('');
+    const isTeacher=nextKind==='teacher';
+    const fallback = isTeacher ? teacherSurname(label) : label;
     try {
-      const items=demo?demoCatalog.filter(i=>i.kind===nextKind):await queryCatalog(nextKind,label);
+      // Teachers in group responses can be abbreviated ("Иванова А. С.").
+      // Search by surname, then match initials without guessing ambiguous identities.
+      const items=demo?demoCatalog.filter(i=>i.kind===nextKind):await queryCatalog(nextKind,fallback);
       const clean=nextKind==='group'?normalizeGroup(label):label.toLocaleLowerCase('ru').replace(/ё/g,'е');
-      const match=items.find(item=>nextKind==='group'?normalizeGroup(item.label)===clean:item.label.toLocaleLowerCase('ru').replace(/ё/g,'е')===clean);
-      if(match) choose({...match,kind:nextKind});
-      else {setTeacher('');setKind(nextKind);setDialog('search');setError('Не удалось найти запись в справочнике. Попробуйте поиск.');}
-    }catch{setError('Справочник временно недоступен');}
+      const match=isTeacher ? uniqueTeacherMatch(label,items)
+        : items.find(item=>nextKind==='group'?normalizeGroup(item.label)===clean:item.label.toLocaleLowerCase('ru').replace(/ё/g,'е')===clean);
+      if (match) choose({...match,kind:nextKind});
+      else {
+        setTeacher('');setSearchKind(nextKind);setSearchTerm(fallback);setDialog('search');
+        setError('Выберите нужного преподавателя или расписание из списка.');
+      }
+    }catch{
+      setTeacher('');setSearchKind(nextKind);setSearchTerm(fallback);setDialog('search');
+      setError('Справочник временно недоступен');
+    }
   }
   const onTeacher = name => {if(name)setTeacher(name);};
   const isMarked=selected&&isFavorite(selected);
   return <div className="app-shell">
     <a href="#main-content" className="skip-link">Перейти к расписанию</a>
     <div className="app-container">
-      <AppHeader kind={kind} selected={selected} theme={theme} isFavorite={Boolean(isMarked)} onKind={selectKind}
-        onTheme={()=>setTheme(current=>current==='light'?'dark':'light')}
-        onFavorite={()=>selected&&toggle(selected)} onSearch={()=>{setSearchKind(kind);setDialog('search');}} onFavorites={()=>setDialog('favorites')}/>
+      <Script src="https://telegram.org/js/telegram-web-app.js" strategy="afterInteractive" onReady={()=>window.dispatchEvent(new Event('uspu:telegram-ready'))}/>
+      <AppHeader kind={kind} selected={selected} theme={theme} preference={preference} isFavorite={Boolean(isMarked)} onKind={selectKind}
+        onTheme={selectPreference}
+        onFavorite={()=>selected&&toggle(selected)} onSearch={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}} onFavorites={()=>{setSearchKind(kind);setDialog('favorites');}}/>
       {demo&&<div className="demo-indicator"><AlertCircle size={15}/> Демонстрационные данные, не реальное расписание</div>}
       {selected ? <>
         <DateStrip selected={day} today={today} onSelect={setDay}/>
@@ -114,12 +125,12 @@ export function SchedulePage() {
       </section>}
       <nav className="bottom-nav" aria-label="Основная навигация">
         <button className="active" onClick={()=>setDialog(null)}><CalendarDays size={23}/><span>Расписание</span></button>
-        <button onClick={()=>{setSearchKind(kind);setDialog('search');}}><Search size={23}/><span>Поиск</span></button>
-        <button onClick={()=>setDialog('favorites')}><Bookmark size={23}/><span>Избранное</span></button>
-        <button onClick={()=>setTheme(t=>t==='light'?'dark':'light')}><span className="theme-nav-icon">◐</span><span>Тема</span></button>
+        <button onClick={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}}><Search size={23}/><span>Поиск</span></button>
+        <button onClick={()=>{setSearchKind(kind);setDialog('favorites');}}><Bookmark size={23}/><span>Избранное</span></button>
+
       </nav>
     </div>
-    {dialog&&<CatalogSearch key={`${searchKind}-${dialog}`} kind={searchKind} demo={demo} initialTab={dialog} favorites={favorites} onClose={()=>setDialog(null)} onSelect={choose}/>} 
+    {dialog&&<CatalogSearch key={`${searchKind}-${dialog}`} kind={searchKind} demo={demo} initialTab={dialog} initialQuery={searchTerm} favorites={favorites} onClose={()=>setDialog(null)} onSelect={choose}/>} 
     {teacher&&<TeacherSheet teacher={teacher} lessons={lessons} onClose={()=>setTeacher('')} onOpen={()=>resolveAndChoose('teacher',teacher)}/>} 
   </div>;
 }
