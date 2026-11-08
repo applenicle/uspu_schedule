@@ -74,6 +74,16 @@ export function parseWeekCallback(raw='') {
   return contextual?{kind:m[1]==='t'?'teacher':'group',id:contextual[2],date:contextual[1]}:
     {kind:m[1]==='t'?'teacher':'group',id:m[2]};
 }
+/** Compact, validated, stateless teacher-choice callbacks (<64 Telegram bytes). */
+export function teacherChoiceCallbackData(id) {
+  const text=String(id||'');
+  return /^\d{1,15}$/u.test(text)?`p|${text}`:null;
+}
+export function parseTeacherChoiceData(raw='') {
+  const match=String(raw).match(/^p\|(\d{1,15})$/u);
+  return match?.[1]||null;
+}
+
 export function parseMenuCallback(raw='') {
   const m=String(raw).match(/^m\|(home|find|group|teacher|help)$/u);
   return m?.[1]||null;

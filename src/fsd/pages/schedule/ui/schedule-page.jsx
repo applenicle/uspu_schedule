@@ -118,8 +118,8 @@ export function SchedulePage() {
           loading={loading} pending={pending} sourceUpdated={sourceUpdated}/>
       </>:<section className="welcome-view">
         <CalendarDays size={38} aria-hidden="true"/>
-        <h2>Расписание без лишних действий</h2>
-        <p>Найдите свою группу, преподавателя или аудиторию и сохраните их в избранном.</p>
+        <h2>Найдите своё расписание</h2>
+        <p>Выберите группу, преподавателя или аудиторию — поиск доступен в каждом разделе.</p>
         {error&&<p role="alert" className="error-banner">{error}</p>}
         <button className="primary-action" onClick={()=>{setSearchKind(kind);setDialog('search');}}>Найти расписание <Search size={19}/></button>
       </section>}

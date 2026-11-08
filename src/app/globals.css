@@ -466,3 +466,62 @@ a {color:var(--blue)}
  .desktop-week-title {display:block;}
  .week-heading {margin:0;background:var(--surface-2);border-color:var(--border);border-left-color:var(--blue);}
 }
+
+/* v14: uniform soft palette, explicit time hierarchy and truly right-aligned rooms. */
+:root {
+  --app-bg:#e6edf4;
+  --surface:#eff3f7;
+  --surface-2:#e1eaf3;
+  --surface-3:#d8e3ee;
+  --lecture-bg:#dceafa;
+  --practice-bg:#f7ebda;
+  --lab-bg:#d9ebe9;
+  --exam-bg:#efe3ed;
+  --other-bg:#e2eaed;
+}
+:root[data-theme='dark'] {
+  --app-bg:#182333;
+  --surface:#223147;
+  --surface-2:#2b3d54;
+  --surface-3:#354b63;
+  --lecture-bg:#304960;
+  --practice-bg:#514734;
+  --lab-bg:#314a50;
+  --exam-bg:#494153;
+  --other-bg:#364853;
+}
+.lesson-card .lesson-time .time-start {font-weight:650;opacity:1;font-variant-numeric:tabular-nums;}
+.lesson-card .lesson-time .time-end {font-weight:400;opacity:.78;font-variant-numeric:tabular-nums;}
+.date-chip .date-number {font-weight:700;font-size:19px;}
+.date-chip .date-weekday {font-size:13px;font-weight:550;}
+.date-chip .date-month {font-size:12px;font-weight:400;opacity:.82;}
+/* A room belongs at the right edge of its own row, independent of name length. */
+.lesson-card .lesson-meta,
+.lesson-card .subgroup-meta,
+.week-grid .lesson-card .lesson-meta,
+.week-grid .lesson-card .subgroup-meta {
+  display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;
+}
+.lesson-card .inline-room,
+.week-grid .lesson-card .inline-room,
+.lesson-card .lesson-meta .inline-room,
+.week-grid .lesson-card .lesson-meta .inline-room,
+.lesson-card .subgroup-meta .inline-room,
+.week-grid .lesson-card .subgroup-meta .inline-room {
+  display:inline-flex;width:max-content;max-width:100%;min-width:0;
+  margin-left:auto;margin-right:0;align-self:flex-end;justify-self:end;
+  justify-content:flex-end;text-align:right;flex:0 1 auto;
+  overflow-wrap:normal;word-break:normal;
+}
+.lesson-card .inline-room span,
+.week-grid .lesson-card .inline-room span {
+  text-align:right;white-space:normal;overflow-wrap:normal;word-break:normal;
+}
+.lesson-card .inline-person {margin-right:auto;justify-content:flex-start;text-align:left;}
+.lesson-card .subgroup {padding-bottom:7px;}
+/* Select a different catalog entity without leaving the search sheet. */
+.search-kind-tabs {display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:3px;
+  padding:4px;margin:8px 0 12px;border-radius:13px;background:var(--surface-2);}
+.search-kind-tabs button {border:0;background:transparent;color:var(--text);
+  border-radius:10px;min-height:44px;font-size:13px;font-weight:500;padding:6px 3px;}
+.search-kind-tabs button.active {background:var(--blue);color:var(--blue-contrast);font-weight:650;}

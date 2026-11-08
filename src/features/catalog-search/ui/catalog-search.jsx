@@ -8,8 +8,10 @@ import { demoCatalog } from '@/shared/lib/demo-data.mjs';
 import { favoritesForKind } from '@/shared/lib/favorites.mjs';
 
 const NAMES={group:'группу',teacher:'преподавателя',room:'аудиторию'};
+const KINDS=[['group','Группы'],['teacher','Преподаватели'],['room','Аудитории']];
 export function CatalogSearch({kind, demo, favorites, onSelect, onClose, initialTab='search', initialQuery=''}) {
   const [tab,setTab] = useState(initialTab);
+  const [activeKind,setActiveKind] = useState(kind);
   const [query,setQuery] = useState(initialQuery);
   const [items,setItems] = useState([]);
   const [loading,setLoading] = useState(false);
@@ -41,32 +43,33 @@ export function CatalogSearch({kind, demo, favorites, onSelect, onClose, initial
       setLoading(true);setError('');
       try {
         if (demo) {
-          const matches=demoCatalog.filter(x=>x.kind===kind).filter(item=>kind==='group'
+          const matches=demoCatalog.filter(x=>x.kind===activeKind).filter(item=>activeKind==='group'
             ? normalizeGroup(item.label).includes(normalizeGroup(query))
             : normalizeTeacherName(item.label).includes(normalizeTeacherName(query)));
           setItems(matches);
         } else {
-          setItems((await queryCatalog(kind,query,controller.signal)).map(item=>({...item,kind})));
+          setItems((await queryCatalog(activeKind,query,controller.signal)).map(item=>({...item,kind:activeKind})));
         }
       } catch (err) {if(!controller.signal.aborted) {setItems([]);setError(err.message);} }
       finally {if(!controller.signal.aborted)setLoading(false);}
     },230);
     return ()=>{clearTimeout(timer);controller.abort();};
-  },[kind,query,tab,demo]);
-  const visibleFavorites=favoritesForKind(favorites,kind);
+  },[activeKind,query,tab,demo]);
+  const visibleFavorites=favoritesForKind(favorites,activeKind);
   return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
     <section className="search-modal" role="dialog" aria-modal="true" aria-label="Поиск расписания">
       <div className="modal-head">
-        <h2>{tab==='favorites'?'Избранное':`Выберите ${NAMES[kind]}`}</h2>
+        <h2>{tab==='favorites'?'Избранное':`Выберите ${NAMES[activeKind]}`}</h2>
         <button className="icon-button" onClick={onClose} aria-label="Закрыть"><X size={22}/></button>
       </div>
+      <div className="search-kind-tabs" role="group" aria-label="Что ищем">{KINDS.map(([id,label])=><button type="button" key={id} className={id===activeKind?'active':''} aria-pressed={id===activeKind} onClick={()=>{setActiveKind(id);setQuery('');setItems([]);setError('');}}>{label}</button>)}</div>
       <div className="search-mode"><button className={tab==='search'?'active':''} onClick={()=>setTab('search')}><Search size={17}/>Поиск</button><button className={tab==='favorites'?'active':''} onClick={()=>setTab('favorites')}><Bookmark size={17}/>Избранное</button></div>
       {tab==='search'?<>
-        <label className="search-field"><Search size={21} aria-hidden="true"/><input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} autoComplete="off" autoCorrect="off" spellCheck={false} aria-label={`Найти ${NAMES[kind]}`} placeholder={kind==='group'?'Например, ДГ-304':kind==='teacher'?'Фамилия преподавателя':'Номер или корпус'}/>{query&&<button onClick={()=>setQuery('')} aria-label="Очистить поиск"><X size={18}/></button>}</label>
+        <label className="search-field"><Search size={21} aria-hidden="true"/><input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} autoComplete="off" autoCorrect="off" spellCheck={false} aria-label={`Найти ${NAMES[activeKind]}`} placeholder={activeKind==='group'?'Например, ДГ-304':activeKind==='teacher'?'Фамилия преподавателя':'Номер или корпус'}/>{query&&<button onClick={()=>setQuery('')} aria-label="Очистить поиск"><X size={18}/></button>}</label>
         <p className="search-hint" role="status">{loading?'Идёт поиск…':error || `${items.length} ${items.length===1?'результат':'результатов'}`}</p>
         <div className="results-list">{items.map(item=><button className="result" key={`${item.kind}:${item.id}`} onClick={()=>onSelect(item)}><span>{item.label}</span><ArrowRight size={18}/></button>)}
         {!items.length&&!loading&&!error&&<div className="empty-small">Ничего не найдено</div>}</div>
-      </>:<div className="results-list">{visibleFavorites.length?visibleFavorites.map(item=><button className="result" key={`${item.kind}:${item.id}`} onClick={()=>onSelect(item)}><span>{item.label}<small>{item.kind==='group'?'Группа':item.kind==='teacher'?'Преподаватель':'Аудитория'}</small></span><ArrowRight size={18}/></button>):<div className="empty-small">{`В избранном пока нет ${kind==='group'?'групп':kind==='teacher'?'преподавателей':'аудиторий'}`}</div>}</div>}
+      </>:<div className="results-list">{visibleFavorites.length?visibleFavorites.map(item=><button className="result" key={`${item.kind}:${item.id}`} onClick={()=>onSelect(item)}><span>{item.label}<small>{item.kind==='group'?'Группа':item.kind==='teacher'?'Преподаватель':'Аудитория'}</small></span><ArrowRight size={18}/></button>):<div className="empty-small">{`В избранном пока нет ${activeKind==='group'?'групп':activeKind==='teacher'?'преподавателей':'аудиторий'}`}</div>}</div>}
     </section>
   </div>;
 }

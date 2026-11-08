@@ -36,56 +36,46 @@ export function withoutPremium(html) {
 }
 const bytes=value=>Buffer.byteLength(value,'utf8');
 
-function lessonBlock(card, kind, timeRanges=null) {
-  const {main,items,time}=card;
-  const category=lessonCategory(main.type);
-  const displayTime=timeRanges
-    ?timeRanges.map(([a,b])=>b?`${a}–${b}`:a).join(' · ')
-    :(time[1]?`${time[0]}–${time[1]}`:time[0]);
-  const meta=[];
-  if(items.length>1 && items.every(item=>!item.subgroup)) meta.push('<li>Параллельные занятия · номера подгрупп не указаны</li>');
-  for (const [index,item] of items.entries()) {
-    // If source doesn't identify subgroup 1/2, do not invent one.
-    const subgroup=item.subgroup?`<b>${esc(`${item.subgroup} подгруппа`)}</b><br/>`:'';
-    const name=kind==='teacher'?item.group:item.teacher;
-    const nameKey=kind==='teacher'?'group':'teacher';
-    const person=name?`${richEmoji(nameKey)} ${esc(name)}<br/>`:'';
-    const place=item.room?`${richEmoji('location')} ауд. ${esc(shortRoom(item.room))}`:'';
-    meta.push(`<li>${subgroup}${person}${place}</li>`);
-  }
-  const subject=esc(main.subject||'Занятие');
-  return `<h3>${subject}</h3><p>${richEmoji('clock')} ${esc(displayTime)} · ${esc(category.label)}</p><ul>${meta.join('')}</ul>`;
+/** Keep each actual time slot separate. Never merge distinct timestamps into one lesson. */
+function lessonBlock(card, kind) {
+  const { main, items, time } = card;
+  const category = lessonCategory(main.type);
+  const slot = time[1] ? `${time[0]}–${time[1]}` : time[0];
+  const subject = esc(main.subject || 'Занятие');
+  const meta = items.map(item => {
+    // In source HTML, "Подгруппа: 0" is unspecified; don't assign numbers.
+    const subgroup = item.subgroup ? `<mark>${esc(item.subgroup)} подгруппа</mark><br/>` : '';
+    const name = kind === 'teacher' ? item.group : item.teacher;
+    const glyph = kind === 'teacher' ? 'group' : 'teacher';
+    const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';
+    const where = item.room ? `${richEmoji('location')} ауд. ${esc(shortRoom(item.room))}` : '';
+    return `<li>${subgroup}${who}${who && where ? '<br/>' : ''}${where}</li>`;
+  }).join('');
+  const people = meta ? `<ul>${meta}</ul>` : '';
+  // RichMessage heading + quotation visually distinguish one period from the next.
+  return `<h3>${esc(slot)}</h3><blockquote><p><b>${subject}</b> · ${esc(category.label)}</p>${people}</blockquote>`;
 }
 
-function compactWeekCards(cards) {
-  const joined=[];
-  for(const card of cards) {
-    const meta=card.items.map(item=>[item.teacher,item.room,item.group,item.subgroup].join('|')).sort().join('||');
-    const signature=[card.main.subject,lessonCategory(card.main.type).key,meta].join('@@');
-    const prev=joined.at(-1);
-    if(prev?.signature===signature) prev.times.push(card.time);
-    else joined.push({signature,card,times:[card.time]});
-  }
-  return joined;
+function dayHeading(day) {
+  return `<h2><mark>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</mark></h2>`;
 }
 
 export function richScheduleDay(lessons, day, title='', kind='group', {compact=false}={}) {
-  const cards=lessonsToCards(lessons,day);
-  const heading=compact?`<h2>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</h2>`:
-    `<h2>${richEmoji('calendar')} ${esc(title||'Расписание УрГПУ')}</h2><p><b>${esc(fullDate(day))}</b></p>`;
-  if(!cards.length) return `${heading}<p>На этот день занятий нет.</p>`;
-  let html=heading;
-  const max=compact?8500:23000;
-  const blocks=compact?compactWeekCards(cards):cards.map(card=>({card,times:null}));
-  for(const {card,times} of blocks) {
-    const block=`<hr/>${lessonBlock(card,kind,times)}`;
-    if(bytes(html+block)>max) {
-      html+='<footer>Остальные занятия доступны в приложении.</footer>';
+  const cards = lessonsToCards(lessons,day);
+  const header = compact ? dayHeading(day) :
+    `<h2>${richEmoji('calendar')} ${esc(title||'Расписание УрГПУ')}</h2>${dayHeading(day)}`;
+  if(!cards.length) return `${header}<p>Занятий нет.</p>`;
+  let result=header;
+  const budget=compact?25000:29000;
+  for (const card of cards) {
+    const block=lessonBlock(card,kind);
+    if(bytes(result+block)>budget) {
+      result+='<footer>Остальные занятия — в приложении.</footer>';
       break;
     }
-    html+=block;
+    result+=(result===header?'':'<hr/>')+block;
   }
-  return html;
+  return result;
 }
 
 export function richScheduleWeek(lessons,anchor,title='',kind='group') {
@@ -94,16 +84,22 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
   let found=false;
   for(let offset=0;offset<7;offset++) {
     const day=shiftISO(start,offset);
-    if(!lessons.some(x=>x.date===day)) continue;
-    const block=richScheduleDay(lessons,day,'',kind,{compact:true});
-    if(bytes(html+block)>24500) {
-      html+='<footer>Продолжение расписания — на сайте.</footer>';
-      break;
+    const cards=lessonsToCards(lessons,day);
+    if(!cards.length) continue;
+    const heading=`<hr/>${dayHeading(day)}`;
+    if (bytes(html+heading)>30000) break;
+    html+=heading;
+    for(const card of cards) {
+      const item=lessonBlock(card,kind);
+      if(bytes(html+item)>30000) {
+        html+='<footer>Продолжение — в приложении.</footer>';
+        return html;
+      }
+      html+=item;
     }
-    html+=`<hr/>${block}`;
     found=true;
   }
-  return found?html:`${html}<p>На эту неделю занятий нет.</p>`;
+  return found?html:`${html}<p>На этой неделе занятий нет.</p>`;
 }
 
 export function richGreeting() {

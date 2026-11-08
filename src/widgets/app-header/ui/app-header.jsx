@@ -17,20 +17,20 @@ export function AppHeader({ kind, selected, theme, preference, isFavorite, onKin
         <ThemeToggle theme={theme} preference={preference} onSelect={onTheme}/>
       </div>
     </div>
-    <div className="subject-row">
+    {selected&&<div className="subject-row">
       <div className="subject-details">
         <span className="eyebrow">{kind==='group'?'РАСПИСАНИЕ ГРУППЫ':kind==='teacher'?'РАСПИСАНИЕ ПРЕПОДАВАТЕЛЯ':'ЗАНЯТОСТЬ АУДИТОРИИ'}</span>
         <div className="entity-selection">
-          <h1>{selected?.label || 'Выберите расписание'}</h1>
+          <h1>{selected.label}</h1>
           <button type="button" className="change-entity" onClick={onChangeSelection} aria-label="Сменить расписание">
-            Сменить <ChevronDown size={17} aria-hidden="true"/>
+            {kind==='group'?'Другая группа':kind==='teacher'?'Другой преподаватель':'Другая аудитория'} <ChevronDown size={17} aria-hidden="true"/>
           </button>
         </div>
       </div>
       <button className={'icon-button favorite-button '+(isFavorite?'is-favorite':'')} onClick={onFavorite} aria-label={isFavorite?'Убрать из избранного':'Добавить в избранное'} aria-pressed={isFavorite} disabled={!selected}>
         <Star size={22} fill={isFavorite?'currentColor':'none'}/>
       </button>
-    </div>
+    </div>}
     <nav className="entity-tabs" aria-label="Тип расписания">
       {VIEWS.map(([value,label])=><button key={value} type="button" className={kind===value?'active':''} aria-current={kind===value?'page':undefined} onClick={()=>onKind(value)}>{label}</button>)}
     </nav>

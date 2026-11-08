@@ -18,13 +18,12 @@ export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
   const multiple = items.length > 1 || hasSubgroups;
   return <article className={`lesson-card type-${type.key}`} aria-label={`${main.subject}, ${type.label}, ${time[0]} ${time[1]}`}>
     <div className="lesson-time" aria-label={`С ${time[0]} до ${time[1]}`}>
-      <span>{time[0]}</span><span>{time[1]}</span>
+      <span className="time-start">{time[0]}</span><span className="time-end">{time[1]}</span>
     </div>
     <div className="lesson-main">
       <div className="lesson-topline"><span className="type-label"><Icon size={15} aria-hidden="true"/>{type.label}</span></div>
       <div className="lesson-title">{main.subject}</div>
       {multiple ? <div className="subgroups">
-        {!hasSubgroups&&<div className="subgroups-note">Параллельные занятия · номер подгруппы не указан</div>}
         {items.map((entry,i)=><div className="subgroup" key={`${entry.teacher}-${entry.room}-${i}`}>
           {entry.subgroup&&<span className="subgroup-index">{entry.subgroup} подгруппа</span>}
           <div className="subgroup-meta">

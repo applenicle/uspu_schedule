@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
 import { todayYekaterinburg } from '@/shared/lib/date';
-import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, scheduleKeyboard, BOT_SITE, safeNormalizeGroup } from '@/shared/lib/telegram-bot.mjs';
+import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData } from '@/shared/lib/telegram-bot.mjs';
 import { richScheduleDay, richScheduleWeek, richGreeting, richHelp, richNotice, premiumButton, withoutPremium } from '@/shared/lib/telegram-rich.mjs';
 import { uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
 
@@ -141,6 +141,13 @@ export async function POST(request) {
       }
       if(menu==='home') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
       else if(menu==='help') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
+      else if(parseTeacherChoiceData(callback.data)) {
+        const sql=db();
+        const found=await findCatalog(sql,'teacher',parseTeacherChoiceData(callback.data));
+        content=found.item
+          ?await timetable(sql,'teacher',found.item.id,'next',null,found.item.label)
+          :{html:richNotice('Не найдено','Преподаватель отсутствует в справочнике.'),reply_markup:menuKeyboard(origin())};
+      }
       else {
         const day=parseCallbackData(callback.data);
         const week=parseWeekCallback(callback.data);
@@ -164,7 +171,16 @@ export async function POST(request) {
         const sql=db();
         const found=await findCatalog(sql,parsed.kind,parsed.query);
         if(found.item) content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
-        else if(found.choices) content={html:richNotice('Уточни преподавателя',`Есть несколько совпадений. Напиши полное ФИО или ID:\n${found.choices.map(x=>`${x.label} — /teacher ${x.id}`).join('\n')}`),reply_markup:menuKeyboard(origin())};
+        else if(found.choices) {
+          const rows=found.choices.map(item=>{
+            const callback_data=teacherChoiceCallbackData(item.id);
+            return callback_data?[premiumButton(item.label,'teacher',{callback_data})]:null;
+          }).filter(Boolean);
+          content={
+            html:richNotice('Выберите преподавателя','Найдено несколько совпадений — нажмите на нужное ФИО.'),
+            reply_markup:{inline_keyboard:[...rows,[premiumButton('Найти другое','search',{callback_data:'m|find'})]]}
+          };
+        }
         else content={html:richNotice('Не найдено','Проверь название группы или ФИО преподавателя.'),reply_markup:menuKeyboard(origin())};
       }
     } else return ok();

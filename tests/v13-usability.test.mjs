@@ -25,30 +25,32 @@ test('webhook uses a unified force-reply prompt; older callbacks remain accepted
  assert.equal(parseMenuCallback('m|teacher'),'teacher');
  assert.equal(scheduleKeyboard('group','Дг-304','2026-11-09').inline_keyboard.length,3);
 });
-test('web cards can show real subgroup if present; otherwise explain absence of subgroup numbers',()=>{
+test('web cards show only real subgroup numbers, without a misleading fallback caption',()=>{
  const jsx=read('../src/entities/lesson/ui/lesson-card.jsx');
  const css=read('../src/app/globals.css');
- assert.match(jsx,/Параллельные занятия · номер подгруппы не указан/);
+ assert.doesNotMatch(jsx,/Параллельные занятия · номер подгруппы не указан/);
+ assert.match(jsx,/entry.subgroup&&/);
  assert.match(css,/--lab-bg: #dceeea/);
  assert.match(css,/--lab-bg: #28434b/);
  assert.match(css,/week-heading strong/);
- assert.match(read('../src/widgets/app-header/ui/app-header.jsx'),/Сменить/);
+ assert.match(read('../src/widgets/app-header/ui/app-header.jsx'),/selected&&/);
  assert.doesNotMatch(read('../src/fsd/pages/schedule/ui/schedule-page.jsx'),/className="bottom-nav"/);
 });
 test('rich week keeps uppercase day headers and no invented subgroup numbers',()=>{
  const data=[{date:'2026-11-09',time:'10:15 - 11:45',subject:'Дизайн',type:'Лабораторная',room:'301',teacher:'А',subgroup:''},
  {date:'2026-11-09',time:'10:15 - 11:45',subject:'Дизайн',type:'Лабораторная',room:'302',teacher:'Б',subgroup:''}];
  const output=richScheduleWeek(data,'2026-11-09','ДГ-304');
- assert.match(output,/<h2>ПОНЕДЕЛЬНИК/);
- assert.match(output,/номера подгрупп не указаны/);
+ assert.match(output,/<h2><mark>ПОНЕДЕЛЬНИК/);
+ assert.doesNotMatch(output,/номера подгрупп не указаны/);
  assert.doesNotMatch(output,/1 подгруппа/);
 });
 
-test('weekly message groups adjacent identical lessons without dropping time slots',()=>{
+test('weekly message keeps identical subjects at separate times for easy subgroup tracking',()=>{
  const data=['10:15 - 11:45','12:00 - 13:30','14:15 - 15:45'].map(time=>({date:'2026-11-09',time,subject:'Графический дизайн',type:'Лабораторная',room:'11-313 УК М9',teacher:'Шмакова Лариса Евгеньевна',subgroup:''}));
  const output=richScheduleWeek(data,'2026-11-09','ДГ-304');
- assert.equal((output.match(/<h3>Графический дизайн<\/h3>/g)||[]).length,1);
- assert.match(output,/10:15–11:45 · 12:00–13:30 · 14:15–15:45/);
+ assert.equal((output.match(/<blockquote>/g)||[]).length,3);
+ for(const time of ['10:15–11:45','12:00–13:30','14:15–15:45']) assert.match(output,new RegExp(`<h3>${time}</h3>`));
+ assert.doesNotMatch(output,/10:15–11:45 · 12:00–13:30/);
 });
 
 test('week callback stays on the week the user is browsing',()=>{
