@@ -13,6 +13,7 @@ test('lesson types classify consistently', () => {
   assert.equal(lessonCategory('Лекции').key,'lecture');
   assert.equal(lessonCategory('Практ.зан-я').key,'practice');
   assert.equal(lessonCategory('Лабораторная').key,'lab');
+  assert.equal(lessonCategory('Лаб.зан-я').key,'lab');
   assert.equal(lessonCategory('Экзамен').key,'exam');
 });
 test('date chips contain month and no ambiguous bare numbers', () => {

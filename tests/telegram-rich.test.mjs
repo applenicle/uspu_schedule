@@ -54,8 +54,8 @@ test('schedule navigation and weekly callback are under 64 UTF8 bytes',()=>{
  assert.deepEqual(parseWeekCallback(callback),{kind:'group',id:'Дг-304'});
  assert.equal(weekCallbackData('group','А'.repeat(80)),null);
  const keys=scheduleKeyboard('group','Дг-304','2026-11-09');
- assert.equal(keys.inline_keyboard[0][0].text,'Назад');
- assert.equal(keys.inline_keyboard[1][2].text,'Неделя');
+ assert.equal(keys.inline_keyboard[0][0].text,'Пред. день');
+ assert.equal(keys.inline_keyboard[1][1].text,'Неделя');
  for(const item of keys.inline_keyboard.flat()) if(item.callback_data) assert.ok(Buffer.byteLength(item.callback_data)<65);
 });
 
@@ -73,4 +73,16 @@ test('weekly rich output contains subgroups, stays within limits, avoids plain H
  assert.match(webhook,/sendRichMessage/);
  assert.match(webhook,/rich_message:\{html:/);
  assert.doesNotMatch(webhook,/parse_mode:\s*'HTML'/);
+});
+
+test('unknown parallel entries do not invent subgroup numbers, week days are uppercase',()=>{
+ const day=richScheduleDay([
+  {date:'2026-11-09',time:'10:15 - 11:45',subject:'Веб-дизайн',type:'Лабораторная',teacher:'А',room:'301',subgroup:''},
+  {date:'2026-11-09',time:'10:15 - 11:45',subject:'Веб-дизайн',type:'Лабораторная',teacher:'Б',room:'302',subgroup:''}
+ ],'2026-11-09','Дг-304');
+ assert.doesNotMatch(day,/Параллельное занятие|подгруппа/);
+ assert.match(richScheduleWeek(sample,'2026-11-09'),/ПОНЕДЕЛЬНИК/);
+ assert.doesNotMatch(richGreeting(),/Без регистрации/);
+ assert.doesNotMatch(richHelp(),/Учётная запись/);
+ assert.equal(menuKeyboard().inline_keyboard.at(-1)[0].style,'success');
 });

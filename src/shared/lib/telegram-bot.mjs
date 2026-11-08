@@ -78,7 +78,7 @@ export function menuKeyboard(site=BOT_SITE) {
   return {inline_keyboard:[
     [btn('Расписание группы','calendar',{callback_data:'m|group'},'primary')],
     [btn('Преподаватели','teacher',{callback_data:'m|teacher'}),btn('Помощь','help',{callback_data:'m|help'})],
-    [btn('Открыть приложение','globe',{web_app:{url:site}},'primary')],
+    [btn('Открыть приложение','globe',{web_app:{url:site}},'success')],
   ]};
 }
 export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg()) {
@@ -87,17 +87,15 @@ export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterin
   const week=weekCallbackData(kind,id);
   const rows=[];
   if(prev&&next) rows.push([
-    btn('Назад','back',{callback_data:prev}),
-    btn('Вперёд','next',{callback_data:next})
+    btn('Пред. день','back',{callback_data:prev}),
+    btn('След. день','next',{callback_data:next})
   ]);
   const todayCb=callbackData(kind,id,today);
-  const tomorrowCb=callbackData(kind,id,shiftISO(today,1));
   const modes=[];
   if(todayCb) modes.push(btn('Сегодня','calendar',{callback_data:todayCb},date===today?'primary':undefined));
-  if(tomorrowCb) modes.push(btn('Завтра','clock',{callback_data:tomorrowCb}));
   if(week) modes.push(btn('Неделя','list',{callback_data:week}));
   if(modes.length) rows.push(modes);
-  rows.push([btn('Меню','back',{callback_data:'m|home'}),btn('Приложение','globe',{web_app:{url:site}})]);
+  rows.push([btn('Меню','back',{callback_data:'m|home'}),btn('Приложение','globe',{web_app:{url:site}},'success')]);
   return {inline_keyboard:rows};
 }
 export function greeting(site=BOT_SITE) {

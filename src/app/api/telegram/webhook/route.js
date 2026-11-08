@@ -77,7 +77,8 @@ async function findCatalog(sql,kind,input) {
 async function timetable(sql,kind,id,period,forcedDate,label) {
   // Save only an interested schedule, never the Telegram user's profile or chat ID.
   await sql`INSERT INTO interests(kind,id,exam,requested_at) VALUES (${kind},${id},false,now())
-    ON CONFLICT(kind,id,exam) DO UPDATE SET requested_at=now()`;
+    ON CONFLICT(kind,id,exam) DO UPDATE SET requested_at=now()
+    WHERE interests.requested_at < now() - interval '5 minutes'`;
   const rows=await sql`SELECT payload,source_updated FROM schedules WHERE kind=${kind} AND id=${id} AND exam=false LIMIT 1`;
   const url=origin();
   if(!rows.length) return {
@@ -89,8 +90,7 @@ async function timetable(sql,kind,id,period,forcedDate,label) {
   const date=forcedDate||periodDate(period,today,lessons);
   const title=label||id;
   const html=period==='week'&&!forcedDate?richScheduleWeek(lessons,today,title,kind):richScheduleDay(lessons,date,title,kind);
-  const source=rows[0].source_updated ? `<footer>Обновлено в УрГПУ: ${escapeText(rows[0].source_updated)}</footer>` : '';
-  return {html:html+source,reply_markup:scheduleKeyboard(kind,id,date,url,today)};
+  return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today)};
 }
 function escapeText(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

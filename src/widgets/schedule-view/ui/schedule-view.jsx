@@ -1,5 +1,5 @@
 'use client';
-import { CalendarDays, ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react';
+import { CalendarDays, ArrowRight } from 'lucide-react';
 import { LessonCard } from '@/entities/lesson/ui/lesson-card';
 import { lessonsToCards } from '@/entities/lesson/lib/cards';
 import { fullDate, dateChip } from '@/shared/lib/date';
@@ -14,8 +14,7 @@ export function ScheduleView({lessons,selected,mode,onTeacher,onGroup,onRoom,onD
   const week = Array.from({length:7},(_,i)=>shiftISO(weekStart,i));
   return <main id="main-content" className="schedule-view">
     <div className="section-title"><h2>{fullDate(selected)}</h2><span className="count-note">{loading?'Загрузка…':`${cards.length} ${cards.length===1?'пара':cards.length>=2&&cards.length<=4?'пары':'пар'}`}</span></div>
-    {sourceUpdated&&<div className="sync-label"><RefreshCw size={13}/>Источник обновлён: {sourceUpdated}</div>}
-    {pending&&<div className="pending-label" role="status">Расписание ещё синхронизируется. Повторите проверку через несколько минут.</div>}
+    {pending&&<div className="pending-label" role="status">Загружаем расписание. Оно появится автоматически.</div>}
     <div className="mobile-lessons">{loading?<div className="loading-label" role="status">Получаем занятия…</div>:
       cards.length?cards.map(card=><LessonCard key={card.key} card={card} mode={mode} onTeacher={onTeacher} onGroup={onGroup} onRoom={onRoom}/>):pending?<div className="loading-label" role="status">Ждём обновления расписания. Данные появятся автоматически.</div>:<EmptyDay onNext={()=>onDay(shiftISO(selected,1))}/>}</div>
     <div className="week-grid" aria-label="Недельное расписание">

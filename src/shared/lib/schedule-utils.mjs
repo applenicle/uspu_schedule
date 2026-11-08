@@ -10,7 +10,7 @@ export function lessonCategory(type = '') {
   const t = String(type).toLowerCase().replace(/ё/g, 'е');
   if (/экзам|аттестац/.test(t)) return { key: 'exam', label: 'Экзамен' };
   if (/зачет/.test(t)) return { key: 'exam', label: 'Зачёт' };
-  if (/лаборат/.test(t)) return { key: 'lab', label: 'Лабораторная' };
+  if (/лаборат|^лаб[.\s-]|лаб\.зан/.test(t)) return { key: 'lab', label: 'Лабораторная' };
   if (/семинар/.test(t)) return { key: 'seminar', label: 'Семинар' };
   if (/практ|практич/.test(t)) return { key: 'practice', label: 'Практика' };
   if (/лекц/.test(t)) return { key: 'lecture', label: 'Лекция' };

@@ -42,8 +42,8 @@ function lessonBlock(card, kind) {
   const displayTime=time[1]?`${time[0]}–${time[1]}`:time[0];
   const meta=[];
   for (const [index,item] of items.entries()) {
-    const isParallel=items.length>1||Boolean(item.subgroup);
-    const subgroup=isParallel?`<b>${esc(item.subgroup?`${item.subgroup} подгруппа`:`Параллельное занятие ${index+1}`)}</b><br/>`:'';
+    // If source doesn't identify subgroup 1/2, do not invent one.
+    const subgroup=item.subgroup?`<b>${esc(`${item.subgroup} подгруппа`)}</b><br/>`:'';
     const name=kind==='teacher'?item.group:item.teacher;
     const nameKey=kind==='teacher'?'group':'teacher';
     const person=name?`${richEmoji(nameKey)} ${esc(name)}<br/>`:'';
@@ -51,12 +51,12 @@ function lessonBlock(card, kind) {
     meta.push(`<li>${subgroup}${person}${place}</li>`);
   }
   const subject=esc(main.subject||'Занятие');
-  return `<h3>${richEmoji('book')} ${subject}</h3><p>${richEmoji('clock')} <b>${esc(displayTime)}</b> · ${esc(category.label)}</p><ul>${meta.join('')}</ul>`;
+  return `<h3>${subject}</h3><p>${richEmoji('clock')} ${esc(displayTime)} · ${esc(category.label)}</p><ul>${meta.join('')}</ul>`;
 }
 
 export function richScheduleDay(lessons, day, title='', kind='group', {compact=false}={}) {
   const cards=lessonsToCards(lessons,day);
-  const heading=compact?`<h3>${esc(fullDate(day))}</h3>`:
+  const heading=compact?`<h3>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</h3>`:
     `<h2>${richEmoji('calendar')} ${esc(title||'Расписание УрГПУ')}</h2><p><b>${esc(fullDate(day))}</b></p>`;
   if(!cards.length) return `${heading}<p>На этот день занятий нет.</p>`;
   let html=heading;
@@ -92,9 +92,8 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
 
 export function richGreeting() {
   return `<h2>${richEmoji('calendar')} Расписание УрГПУ</h2>`+
-    `<p>Актуальное расписание групп и преподавателей прямо в Telegram.</p>`+
-    `<p>${richEmoji('search')} Выбери раздел ниже или напиши название группы, например <code>дг304</code>.</p>`+
-    `<hr/><footer>Без регистрации · Данные УрГПУ</footer>`;
+    `<p>Выбери «Расписание группы» или «Преподаватели» в меню.</p>`+
+    `<p>Можно просто отправить название группы: <code>дг304</code>.</p>`;
 }
 
 export function richHelp() {
@@ -106,7 +105,7 @@ export function richHelp() {
     `<li><code>/tomorrow ДГ-304</code> — завтра</li>`+
     `<li><code>/week ДГ-304</code> — неделя</li>`+
     `<li><code>/teacher Фамилия Имя Отчество</code> — преподаватель</li></ul>`+
-    `<footer>Учётная запись и вход через Telegram не требуются.</footer>`;
+    `<p>Чтобы открыть календарь и поиск — выбери «Открыть приложение».</p>`;
 }
 
 export function richNotice(title,message) {

@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 root=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True, executable_path='/usr/bin/chromium', args=['--no-sandbox'])
-    for name,w,h in [('light-mobile',390,844),('dark-mobile',390,844),('light-teacher',390,844),('light-subgroups',390,844),('long-names',390,844),('long-names',320,780),('light-mobile',320,780)]:
+    for name,w,h in [('light-mobile',390,844),('dark-mobile',390,844),('long-names',390,844),('long-names',320,780),('light-mobile',320,780)]:
         page=browser.new_page(viewport={'width':w,'height':h},device_scale_factor=1)
         html=(root/'previews'/f'{name}.html').read_text()
         css=(root/'src/app/globals.css').read_text()

@@ -34,9 +34,14 @@ export async function GET(request) {
       WHERE kind = ${kind} AND id = ${id} AND exam = ${exam}
       LIMIT 1
     `;
-    if (!rows.length) return response({ lessons: [], pending: true });
-    return response({ lessons: rows[0].payload, fetched_at: rows[0].fetched_at,
-      source_updated: rows[0].source_updated, pending: false });
+    if (!rows.length) return response({ lessons: [], pending: true, cached: false });
+    // A persistent, cross-user cache in Neon: every visitor reads the same snapshot.
+    // Keep stale snapshots visible if the upstream is temporarily unavailable.
+    const ageSeconds = Math.max(0, Math.floor((Date.now() - new Date(rows[0].fetched_at).getTime()) / 1000));
+    return Response.json({ lessons: rows[0].payload, fetched_at: rows[0].fetched_at,
+      source_updated: rows[0].source_updated, pending: false, cached: true,
+      stale: ageSeconds > 1800, age_seconds: ageSeconds },
+      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60', 'X-USPU-Cache': 'HIT' } });
   } catch (error) {
     console.error('schedule error:', error.message);
     return response({ error: 'База данных недоступна' }, 503);

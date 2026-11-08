@@ -49,6 +49,7 @@ function resolveFile(spec,from){
 }
 function load(spec,from=path.join(root,'src/app/page.jsx')){
  if(spec==='react')return React;
+ if(spec==='next/script')return {__esModule:true,default:()=>null};
  if(spec==='lucide-react')return iconProxy;
  if(spec.endsWith('.css'))return {};
  const file=resolveFile(spec,from);
@@ -86,24 +87,16 @@ function render(node, overrides={}){
  const attr=attrs(node.props);
  return voids.has(tag)?`<${tag}${attr}/>`:`<${tag}${attr}>${render(node.props.children,overrides)}</${tag}>`;
 }
-const {SchedulePage}=load('@/fsd/pages/schedule/ui/schedule-page');
-const {demoCatalog,demoLessons}=load('@/shared/lib/demo-data.mjs');
-const demoToday='2026-11-08';
-const group=demoCatalog.find(x=>x.kind==='group'&&x.id==='ДГ-304');
-const groupLessons=demoLessons(demoToday,'group','ДГ-304');
-const teacherRecord=demoCatalog.find(x=>x.kind==='teacher'&&x.id==='T2');
-const teacherLessons=demoLessons(demoToday,'teacher','T2');
-const stressLessons=groupLessons.map(item=>({...item, teacher:item.subgroup==='1'?'Александрова-Кузнецова Екатерина Константиновна':item.subgroup==='2'?'Станиславская-Владимирова Анастасия Александровна':item.teacher}));
-const previews=[
- {name:'light-mobile',theme:'light',over:{0:true,1:'light',2:'group',3:'group',4:group,5:demoToday,6:'2026-11-09',7:groupLessons}},
- {name:'dark-mobile',theme:'dark',over:{0:true,1:'dark',2:'group',3:'group',4:group,5:demoToday,6:'2026-11-09',7:groupLessons}},
- {name:'light-teacher',theme:'light',over:{0:true,1:'light',2:'teacher',3:'teacher',4:teacherRecord,5:demoToday,6:'2026-11-09',7:teacherLessons}},
- {name:'light-subgroups',theme:'light',over:{0:true,1:'light',2:'group',3:'group',4:group,5:demoToday,6:'2026-11-09',7:groupLessons,13:'Смирнова Елена Викторовна'}},
- {name:'long-names',theme:'light',over:{0:true,1:'light',2:'group',3:'group',4:group,5:demoToday,6:'2026-11-09',7:stressLessons}}
-];
-for(const item of previews){
- const body=render(React.createElement(SchedulePage),{SchedulePage:item.over});
- const html=`<!DOCTYPE html><html lang="ru" data-theme="${item.theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>USPU source JSX visual QA</title><link href="../src/app/globals.css" rel="stylesheet"></head><body>${body}</body></html>`;
+const {ScheduleView}=load('@/widgets/schedule-view/ui/schedule-view');
+const {DateStrip}=load('@/features/date-navigation/ui/date-strip');
+const {demoLessons}=load('@/shared/lib/demo-data.mjs');
+const selected='2026-11-09';
+const demo=demoLessons('2026-11-08','group','ДГ-304');
+const stress=demo.map(item=>({...item,teacher:item.subgroup==='1'?'Александрова-Кузнецова Екатерина Константиновна':item.subgroup==='2'?'Станиславская-Владимирова Анастасия Александровна':item.teacher}));
+for(const item of [{name:'light-mobile',theme:'light',lessons:demo},{name:'dark-mobile',theme:'dark',lessons:demo},{name:'long-names',theme:'light',lessons:stress}]) {
+ const nav=render(React.createElement(DateStrip,{selected,today:'2026-11-08',onSelect:()=>{}}));
+ const body=render(React.createElement(ScheduleView,{lessons:item.lessons,selected,mode:'group',onTeacher:()=>{},onGroup:()=>{},onRoom:()=>{},onDay:()=>{},loading:false,pending:false,sourceUpdated:''}));
+ const html=`<!DOCTYPE html><html lang="ru" data-theme="${item.theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>USPU JSX component QA</title><link href="../src/app/globals.css" rel="stylesheet"></head><body><div class="app-shell"><div class="app-container"><div class="app-header"><h1>ДГ-304 · Расписание УрГПУ</h1></div>${nav}${body}</div></div></body></html>`;
  const dir=path.join(root,'previews');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,item.name+'.html'),html);
  console.log(item.name,html.length);
 }
