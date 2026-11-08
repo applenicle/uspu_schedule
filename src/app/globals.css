@@ -288,3 +288,62 @@ a {color:var(--blue)}
     --exam-bg:#4b3a57;--exam-accent:#d9bee8;--exam-text:#f6e8ff;
     --other-bg:#304951;--other-accent:#a2d4d8;--other-text:#e5f8f8;}
 }
+
+/* v10 layout: readable, unbroken names; full-card semantic colors. */
+.lesson-card { min-width:0; overflow:hidden; }
+.lesson-main { min-width:0; width:100%; }
+.lesson-title { overflow-wrap:break-word; word-break:normal; hyphens:auto; font-weight:600; }
+.lesson-meta,.subgroup-meta {
+  display:flex; flex-direction:column; align-items:stretch; gap:2px;
+  width:100%; min-width:0; margin-top:7px;
+}
+.lesson-card .inline-person,.lesson-card .inline-room {
+  display:flex; align-items:flex-start; min-width:0; width:100%;
+  max-width:100%; min-height:34px; font-size:14px; line-height:1.45;
+  word-break:normal; overflow-wrap:normal; white-space:normal;
+}
+.lesson-card .inline-person { justify-content:flex-start; text-align:left; }
+.lesson-card .inline-person span {
+  display:block; min-width:0; flex:1 1 auto;
+  word-break:normal; overflow-wrap:break-word; hyphens:auto;
+}
+.lesson-card .inline-room {
+  justify-content:flex-end; text-align:right; align-self:flex-end;
+  margin-left:0; justify-self:initial; gap:6px;
+}
+.lesson-card .inline-room span {
+  display:block; flex:0 1 auto; min-width:0;
+  white-space:normal; overflow-wrap:break-word; word-break:normal;
+}
+.lesson-card .inline-person svg,.lesson-card .inline-room svg {
+  flex:0 0 auto; margin-top:2px;
+}
+.lesson-card .subgroup { min-width:0; }
+.lesson-card .subgroup-index { font-size:12px; }
+.lesson-time { font-variant-numeric:tabular-nums; }
+/* Override older narrow/long-name grid rules without abusing :has(). */
+@media (max-width:899px) {
+  .lesson-card .lesson-meta,.lesson-card .subgroup-meta { display:flex; flex-direction:column; }
+  .lesson-card .inline-room { grid-column:auto; }
+}
+@media (max-width:355px) {
+  .lesson-card { grid-template-columns:55px minmax(0,1fr);gap:8px;padding:12px 10px; }
+  .lesson-card .inline-person,.lesson-card .inline-room { font-size:13px; }
+}
+@media (min-width:900px) {
+  .week-grid .lesson-card { display:block; min-width:0; padding:10px 9px; }
+  .week-grid .lesson-main { width:100%; }
+  .week-grid .lesson-meta,.week-grid .subgroup-meta { display:flex;flex-direction:column; gap:2px;align-items:stretch; }
+  .week-grid .lesson-title { font-size:13px;line-height:1.38; }
+  .week-grid .lesson-time { display:flex;flex-direction:row;flex-wrap:wrap;gap:3px;font-size:12px; }
+  .week-grid .inline-person,.week-grid .inline-room {
+    display:flex; min-height:32px;max-width:100%;width:100%;font-size:12px;line-height:1.35;
+    white-space:normal;word-break:normal;overflow-wrap:normal;
+  }
+  .week-grid .inline-person span,.week-grid .inline-room span { overflow-wrap:break-word;word-break:normal; }
+  .week-grid .inline-room {text-align:right;justify-content:flex-end;}
+  .week-grid .lesson-card .subgroups {margin-top:6px;}
+  .week-grid .subgroup {padding:5px 0 3px;}
+}
+/* Clearly distinguish a global theme menu from an ambiguous split-circle glyph. */
+.theme-control .icon-button { border:1px solid var(--border);background:var(--surface-2); }

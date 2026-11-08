@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { MonitorCog, Moon, Sun, Check, ChevronDown } from 'lucide-react';
+import { SunMoon, Moon, Sun, Check, ChevronDown } from 'lucide-react';
 
 const OPTIONS = [
-  {value:'auto', label:'Как на устройстве', Icon:MonitorCog},
+  {value:'auto', label:'Как на устройстве', Icon:SunMoon},
   {value:'light', label:'Светлая', Icon:Sun},
   {value:'dark', label:'Тёмная', Icon:Moon},
 ];
@@ -18,10 +18,10 @@ export function ThemeToggle({ theme, preference, onSelect }) {
     document.addEventListener('keydown', onKey);
     return () => {document.removeEventListener('pointerdown', onClick);document.removeEventListener('keydown', onKey);};
   }, [open]);
-  const CurrentIcon = preference === 'auto' ? MonitorCog : theme === 'dark' ? Moon : Sun;
+  const CurrentIcon = theme === 'dark' ? Sun : Moon;
   return <div className="theme-control" ref={root}>
     <button type="button" className="icon-button" onClick={()=>setOpen(v=>!v)}
-      aria-haspopup="true" aria-expanded={open} aria-label={`Тема: ${OPTIONS.find(x=>x.value===preference)?.label}. Изменить`} title="Тема оформления">
+      aria-haspopup="true" aria-expanded={open} aria-label={`Тема: ${OPTIONS.find(x=>x.value===preference)?.label}. Изменить`} title="Выбрать тему (Авто, Светлая, Тёмная)">
       <CurrentIcon aria-hidden="true" size={21}/>
     </button>
     {open && <div className="theme-menu" role="group" aria-label="Тема оформления">
