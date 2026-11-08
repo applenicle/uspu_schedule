@@ -40,7 +40,7 @@ test('premium main menu navigation remains short and functional',()=>{
  const flat=keyboard.inline_keyboard.flat();
  assert.equal(flat.length,2);
  assert.equal(flat.filter(x=>x.icon_custom_emoji_id).length,2);
- assert.equal(flat.find(x=>x.text==='Найти расписание').callback_data,'m|find');
+ assert.equal(flat.find(x=>x.text==='Выбрать расписание').callback_data,'m|find');
  assert.equal(flat.find(x=>x.text==='Открыть приложение').style,'success');
  assert.deepEqual(flat.find(x=>x.text==='Открыть приложение').web_app,{url:'https://example.org/'});
  assert.equal(parseMenuCallback('m|find'),'find');

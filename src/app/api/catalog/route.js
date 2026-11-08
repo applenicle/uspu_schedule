@@ -19,7 +19,14 @@ export async function GET(request) {
       const starts = `${clean}%`;
       const items = await sql`
         SELECT id, label FROM catalog
-        WHERE kind = 'group' AND (
+        WHERE kind = 'group'
+          AND NOT EXISTS (
+            SELECT 1 FROM schedules s
+            WHERE s.kind = catalog.kind AND s.id = catalog.id AND s.exam = false
+              AND s.fetched_at > now() - interval '12 hours'
+              AND jsonb_array_length(s.payload) = 0
+          )
+          AND (
           regexp_replace(replace(upper(label), 'Ё', 'Е'), '[-[:space:]_–—‑]', '', 'g') ILIKE ${pattern} ESCAPE '!'
           OR label ILIKE ${like} ESCAPE '!'
         )
@@ -33,7 +40,13 @@ export async function GET(request) {
     }
     const items = await sql`
       SELECT id, label FROM catalog
-      WHERE kind = ${kind} AND label ILIKE ${like} ESCAPE '!'
+      WHERE kind = ${kind} AND label ILIKE ${like}
+        AND (kind = 'room' OR NOT EXISTS (
+          SELECT 1 FROM schedules s
+          WHERE s.kind = catalog.kind AND s.id = catalog.id AND s.exam = false
+            AND s.fetched_at > now() - interval '12 hours'
+            AND jsonb_array_length(s.payload) = 0
+        )) ESCAPE '!'
       ORDER BY CASE WHEN lower(label) = lower(${q}) THEN 0 ELSE 1 END, label
       LIMIT 50
     `;

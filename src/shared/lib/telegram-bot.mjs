@@ -91,7 +91,7 @@ export function parseMenuCallback(raw='') {
 
 export function menuKeyboard(site=BOT_SITE) {
   return {inline_keyboard:[
-    [btn('Найти расписание','search',{callback_data:'m|find'})],
+    [btn('Выбрать расписание','search',{callback_data:'m|find'})],
     [btn('Открыть приложение','globe',{web_app:{url:site}},'success')]
   ]};
 }
@@ -101,7 +101,7 @@ export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterin
   const week=weekCallbackData(kind,id,date);
   const rows=[];
   if(prev&&next) rows.push([btn('← День','back',{callback_data:prev}),btn('День →','next',{callback_data:next})]);
-  if(week) rows.push([btn('Неделя','list',{callback_data:week}),btn('Найти','search',{callback_data:'m|find'})]);
+  if(week) rows.push([btn('Неделя','list',{callback_data:week}),btn('Сменить расписание','search',{callback_data:'m|find'})]);
   rows.push([btn('Приложение','globe',{web_app:{url:site}},'success')]);
   return {inline_keyboard:rows};
 }

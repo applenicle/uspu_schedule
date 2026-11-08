@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Script from 'next/script';
 import { CalendarDays, Search, Bookmark, AlertCircle } from 'lucide-react';
 import { AppHeader } from '@/widgets/app-header/ui/app-header';
+import { MobileEntityNav } from '@/widgets/mobile-entity-nav/ui/mobile-entity-nav';
 import { ScheduleView } from '@/widgets/schedule-view/ui/schedule-view';
 import { TeacherSheet } from '@/widgets/teacher-sheet/ui/teacher-sheet';
 import { CatalogSearch } from '@/features/catalog-search/ui/catalog-search';
@@ -125,6 +126,7 @@ export function SchedulePage() {
       </section>}
 
     </div>
+    <MobileEntityNav kind={kind} onSelectKind={selectKind}/>
     {dialog&&<CatalogSearch key={`${searchKind}-${dialog}`} kind={searchKind} demo={demo} initialTab={dialog} initialQuery={searchTerm} favorites={favorites} onClose={()=>setDialog(null)} onSelect={choose}/>} 
     {teacher&&<TeacherSheet teacher={teacher} lessons={lessons} onClose={()=>setTeacher('')} onOpen={()=>resolveAndChoose('teacher',teacher)}/>} 
   </div>;

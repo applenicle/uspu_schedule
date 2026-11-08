@@ -44,7 +44,7 @@ test('teacher choice callback validates IDs and has direct schedule handler',()=
  assert.match(webhook,/premiumButton\(item.label,'teacher',\{callback_data\}\)/);
 });
 
-test('web UI uses category selection and aligns room to trailing edge',()=>{
+test('web UI uses category selection and keeps rooms readable',()=>{
  const header=read('../src/widgets/app-header/ui/app-header.jsx');
  const search=read('../src/features/catalog-search/ui/catalog-search.jsx');
  const style=read('../src/app/globals.css');
@@ -54,7 +54,8 @@ test('web UI uses category selection and aligns room to trailing edge',()=>{
  assert.match(search,/search-kind-tabs/);
  assert.match(search,/setActiveKind\(id\)/);
  assert.match(style,/\.week-grid \.lesson-card \.subgroup-meta \.inline-room/);
- assert.match(style,/margin-left:auto;margin-right:0;align-self:flex-end/);
+ assert.match(style,/\.lesson-card \.lesson-meta \.inline-room/);
+ assert.match(style,/align-self:flex-start;justify-self:start;justify-content:flex-start/);
  assert.match(lesson,/className="time-start"/);
  assert.match(lesson,/className="time-end"/);
  assert.doesNotMatch(lesson,/Параллельные занятия · номер подгруппы не указан/);
