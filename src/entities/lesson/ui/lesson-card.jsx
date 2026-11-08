@@ -24,6 +24,7 @@ export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
       <div className="lesson-topline"><span className="type-label"><Icon size={15} aria-hidden="true"/>{type.label}</span></div>
       <div className="lesson-title">{main.subject}</div>
       {multiple ? <div className="subgroups">
+        {!hasSubgroups&&<div className="subgroups-note">Параллельные занятия · номер подгруппы не указан</div>}
         {items.map((entry,i)=><div className="subgroup" key={`${entry.teacher}-${entry.room}-${i}`}>
           {entry.subgroup&&<span className="subgroup-index">{entry.subgroup} подгруппа</span>}
           <div className="subgroup-meta">

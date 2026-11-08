@@ -35,7 +35,7 @@ test('telegram week encodes lesson types and subgroups safely',()=>{
  assert.match(html,/2 подгруппа/);
  assert.match(html,/11-314/);
  assert.doesNotMatch(html,/& <>/);
- assert.match(greeting().text,/Регистрация не требуется/);
+ assert.match(greeting().text,/группы или фамилию преподавателя/);
 });
 test('room formatter removes decorative building descriptions',()=>{
  assert.equal(shortRoom('Учебная аудитория М1-313 УК М9'),'М1-313 · УК М9');

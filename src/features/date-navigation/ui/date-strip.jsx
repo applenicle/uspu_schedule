@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { dateChip, dayRange } from '@/shared/lib/date';
-import { shiftISO } from '@/shared/lib/schedule-utils.mjs';
+import { shiftISO, startOfWeek } from '@/shared/lib/schedule-utils.mjs';
 
 const WEEKDAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const dateUTC=iso=>new Date(`${iso}T12:00:00Z`);
@@ -40,9 +40,17 @@ export function DateStrip({selected,today,onSelect}) {
     return ()=>{document.removeEventListener('pointerdown',onPointer);document.removeEventListener('keydown',onKey);};
   },[open]);
   const dates=dayRange(shiftISO(selected,-1),5);
+  const weekStart=startOfWeek(selected);
+  const weekEnd=shiftISO(weekStart,6);
+  const weekLabel=(()=>{
+    const fmt=iso=>new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',timeZone:'UTC'}).format(dateUTC(iso));
+    const sameMonth=weekStart.slice(0,7)===weekEnd.slice(0,7);
+    return sameMonth?`${Number(weekStart.slice(-2))}–${fmt(weekEnd)}`:`${fmt(weekStart)} – ${fmt(weekEnd)}`;
+  })();
   function choose(iso){onSelect(iso);setOpen(false);}
   return <section className="date-nav" aria-label="Выбор дня">
-    <button className="date-arrow" type="button" title="Предыдущий день" aria-label="Предыдущий день" onClick={()=>onSelect(shiftISO(selected,-1))}><ChevronLeft size={21}/></button>
+    <button className="date-arrow" type="button" title="Предыдущая неделя" aria-label="Предыдущая неделя" onClick={()=>onSelect(shiftISO(selected,-7))}><ChevronLeft size={21}/></button>
+    <div className="desktop-week-label" aria-live="polite">Неделя: {weekLabel}</div>
     <div className="dates" role="group" aria-label="Даты">
       {dates.map(iso=>{
         const {weekday,day,month}=dateChip(iso);
@@ -51,7 +59,7 @@ export function DateStrip({selected,today,onSelect}) {
         </button>;
       })}
     </div>
-    <button className="date-arrow" type="button" title="Следующий день" aria-label="Следующий день" onClick={()=>onSelect(shiftISO(selected,1))}><ChevronRight size={21}/></button>
+    <button className="date-arrow" type="button" title="Следующая неделя" aria-label="Следующая неделя" onClick={()=>onSelect(shiftISO(selected,7))}><ChevronRight size={21}/></button>
     <div className="calendar-control" ref={root}>
       <button type="button" className="calendar-button" aria-label="Открыть календарь" aria-expanded={open} aria-controls="uspu-calendar" onClick={()=>setOpen(s=>!s)}><CalendarDays aria-hidden="true" size={21}/></button>
       {open&&<div className="calendar-popover" id="uspu-calendar" role="group" aria-label="Календарь выбора дня">

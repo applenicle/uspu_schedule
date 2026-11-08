@@ -107,7 +107,7 @@ export function SchedulePage() {
       <Script src="https://telegram.org/js/telegram-web-app.js" strategy="afterInteractive" onReady={()=>window.dispatchEvent(new Event('uspu:telegram-ready'))}/>
       <AppHeader kind={kind} selected={selected} theme={theme} preference={preference} isFavorite={Boolean(isMarked)} onKind={selectKind}
         onTheme={selectPreference}
-        onFavorite={()=>selected&&toggle(selected)} onSearch={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}} onFavorites={()=>{setSearchKind(kind);setDialog('favorites');}}/>
+        onFavorite={()=>selected&&toggle(selected)} onChangeSelection={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}} onSearch={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}} onFavorites={()=>{setSearchKind(kind);setDialog('favorites');}}/>
       {demo&&<div className="demo-indicator"><AlertCircle size={15}/> Демонстрационные данные, не реальное расписание</div>}
       {selected ? <>
         <DateStrip selected={day} today={today} onSelect={setDay}/>
@@ -123,12 +123,7 @@ export function SchedulePage() {
         {error&&<p role="alert" className="error-banner">{error}</p>}
         <button className="primary-action" onClick={()=>{setSearchKind(kind);setDialog('search');}}>Найти расписание <Search size={19}/></button>
       </section>}
-      <nav className="bottom-nav" aria-label="Основная навигация">
-        <button className="active" onClick={()=>setDialog(null)}><CalendarDays size={23}/><span>Расписание</span></button>
-        <button onClick={()=>{setSearchKind(kind);setSearchTerm('');setDialog('search');}}><Search size={23}/><span>Поиск</span></button>
-        <button onClick={()=>{setSearchKind(kind);setDialog('favorites');}}><Bookmark size={23}/><span>Избранное</span></button>
 
-      </nav>
     </div>
     {dialog&&<CatalogSearch key={`${searchKind}-${dialog}`} kind={searchKind} demo={demo} initialTab={dialog} initialQuery={searchTerm} favorites={favorites} onClose={()=>setDialog(null)} onSelect={choose}/>} 
     {teacher&&<TeacherSheet teacher={teacher} lessons={lessons} onClose={()=>setTeacher('')} onOpen={()=>resolveAndChoose('teacher',teacher)}/>} 

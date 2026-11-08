@@ -36,11 +36,14 @@ export function withoutPremium(html) {
 }
 const bytes=value=>Buffer.byteLength(value,'utf8');
 
-function lessonBlock(card, kind) {
+function lessonBlock(card, kind, timeRanges=null) {
   const {main,items,time}=card;
   const category=lessonCategory(main.type);
-  const displayTime=time[1]?`${time[0]}–${time[1]}`:time[0];
+  const displayTime=timeRanges
+    ?timeRanges.map(([a,b])=>b?`${a}–${b}`:a).join(' · ')
+    :(time[1]?`${time[0]}–${time[1]}`:time[0]);
   const meta=[];
+  if(items.length>1 && items.every(item=>!item.subgroup)) meta.push('<li>Параллельные занятия · номера подгрупп не указаны</li>');
   for (const [index,item] of items.entries()) {
     // If source doesn't identify subgroup 1/2, do not invent one.
     const subgroup=item.subgroup?`<b>${esc(`${item.subgroup} подгруппа`)}</b><br/>`:'';
@@ -54,15 +57,28 @@ function lessonBlock(card, kind) {
   return `<h3>${subject}</h3><p>${richEmoji('clock')} ${esc(displayTime)} · ${esc(category.label)}</p><ul>${meta.join('')}</ul>`;
 }
 
+function compactWeekCards(cards) {
+  const joined=[];
+  for(const card of cards) {
+    const meta=card.items.map(item=>[item.teacher,item.room,item.group,item.subgroup].join('|')).sort().join('||');
+    const signature=[card.main.subject,lessonCategory(card.main.type).key,meta].join('@@');
+    const prev=joined.at(-1);
+    if(prev?.signature===signature) prev.times.push(card.time);
+    else joined.push({signature,card,times:[card.time]});
+  }
+  return joined;
+}
+
 export function richScheduleDay(lessons, day, title='', kind='group', {compact=false}={}) {
   const cards=lessonsToCards(lessons,day);
-  const heading=compact?`<h3>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</h3>`:
+  const heading=compact?`<h2>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</h2>`:
     `<h2>${richEmoji('calendar')} ${esc(title||'Расписание УрГПУ')}</h2><p><b>${esc(fullDate(day))}</b></p>`;
   if(!cards.length) return `${heading}<p>На этот день занятий нет.</p>`;
   let html=heading;
   const max=compact?8500:23000;
-  for(const card of cards) {
-    const block=`<hr/>${lessonBlock(card,kind)}`;
+  const blocks=compact?compactWeekCards(cards):cards.map(card=>({card,times:null}));
+  for(const {card,times} of blocks) {
+    const block=`<hr/>${lessonBlock(card,kind,times)}`;
     if(bytes(html+block)>max) {
       html+='<footer>Остальные занятия доступны в приложении.</footer>';
       break;
@@ -92,20 +108,13 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
 
 export function richGreeting() {
   return `<h2>${richEmoji('calendar')} Расписание УрГПУ</h2>`+
-    `<p>Выбери «Расписание группы» или «Преподаватели» в меню.</p>`+
-    `<p>Можно просто отправить название группы: <code>дг304</code>.</p>`;
+    `<p>Отправь группу или фамилию преподавателя — например, <code>дг304</code> или <code>Иванова</code>.</p>`;
 }
 
 export function richHelp() {
-  return `<h2>${richEmoji('help')} Как пользоваться</h2>`+
-    `<p>Выбери раздел в меню и отправь группу или ФИО преподавателя.</p>`+
-    `<h3>${richEmoji('list')} Команды</h3>`+
-    `<ul><li><code>/group ДГ-304</code> — ближайшие занятия</li>`+
-    `<li><code>/today ДГ-304</code> — сегодня</li>`+
-    `<li><code>/tomorrow ДГ-304</code> — завтра</li>`+
-    `<li><code>/week ДГ-304</code> — неделя</li>`+
-    `<li><code>/teacher Фамилия Имя Отчество</code> — преподаватель</li></ul>`+
-    `<p>Чтобы открыть календарь и поиск — выбери «Открыть приложение».</p>`;
+  return `<h2>${richEmoji('help')} Поиск расписания</h2>`+
+    `<p>Напиши название группы или ФИО преподавателя. В меню есть один поиск для всех.</p>`+
+    `<p>Также доступны команды <code>/today ДГ-304</code>, <code>/week ДГ-304</code> и <code>/teacher Иванова</code>.</p>`;
 }
 
 export function richNotice(title,message) {

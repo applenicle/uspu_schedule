@@ -1,10 +1,10 @@
 'use client';
-import { BookOpen, Bookmark, Search, Star } from 'lucide-react';
+import { BookOpen, Bookmark, Search, Star, ChevronDown } from 'lucide-react';
 import { ThemeToggle } from '@/features/theme-switch/ui/theme-toggle';
 
 const VIEWS = [ ['group','Группа'], ['teacher','Преподаватель'], ['room','Аудитория'] ];
 
-export function AppHeader({ kind, selected, theme, preference, isFavorite, onKind, onSearch, onTheme, onFavorite, onFavorites }) {
+export function AppHeader({ kind, selected, theme, preference, isFavorite, onKind, onSearch, onTheme, onFavorite, onFavorites, onChangeSelection }) {
   return <header className="app-header">
     <div className="brand-row">
       <div className="brand">
@@ -20,7 +20,12 @@ export function AppHeader({ kind, selected, theme, preference, isFavorite, onKin
     <div className="subject-row">
       <div className="subject-details">
         <span className="eyebrow">{kind==='group'?'РАСПИСАНИЕ ГРУППЫ':kind==='teacher'?'РАСПИСАНИЕ ПРЕПОДАВАТЕЛЯ':'ЗАНЯТОСТЬ АУДИТОРИИ'}</span>
-        <h1>{selected?.label || 'Выберите расписание'}</h1>
+        <div className="entity-selection">
+          <h1>{selected?.label || 'Выберите расписание'}</h1>
+          <button type="button" className="change-entity" onClick={onChangeSelection} aria-label="Сменить расписание">
+            Сменить <ChevronDown size={17} aria-hidden="true"/>
+          </button>
+        </div>
       </div>
       <button className={'icon-button favorite-button '+(isFavorite?'is-favorite':'')} onClick={onFavorite} aria-label={isFavorite?'Убрать из избранного':'Добавить в избранное'} aria-pressed={isFavorite} disabled={!selected}>
         <Star size={22} fill={isFavorite?'currentColor':'none'}/>

@@ -16,9 +16,9 @@
   --practice-bg: #fff0d8;
   --practice-accent: #93600f;
   --practice-text: #5e3e12;
-  --lab-bg: #f9e2df;
-  --lab-accent: #ab504c;
-  --lab-text: #6a2925;
+  --lab-bg: #dceeea;
+  --lab-accent: #24756c;
+  --lab-text: #17483f;
   --exam-bg: #efe3f5;
   --exam-accent: #78538a;
   --exam-text: #583365;
@@ -29,13 +29,13 @@
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --app-bg: #172437;
-  --surface: #203149;
-  --surface-2: #293c55;
-  --surface-3: #344a65;
+  --app-bg: #141e2c;
+  --surface: #1d293a;
+  --surface-2: #27364a;
+  --surface-3: #34475d;
   --text: #eef4fc;
   --muted: #c0cede;
-  --border: #526780;
+  --border: #4d6279;
   --blue: #83b6ee;
   --blue-contrast: #10253b;
   --focus: #a8ccff;
@@ -45,9 +45,9 @@
   --practice-bg: #52442d;
   --practice-accent: #f6d08a;
   --practice-text: #fff1d4;
-  --lab-bg: #5a3c43;
-  --lab-accent: #f3b4b1;
-  --lab-text: #ffe9e7;
+  --lab-bg: #28434b;
+  --lab-accent: #91d0c9;
+  --lab-text: #e1f8f5;
   --exam-bg: #4b3a57;
   --exam-accent: #d9bee8;
   --exam-text: #f6e8ff;
@@ -280,12 +280,12 @@ a {color:var(--blue)}
 }
 /* The dark fallback is immediately selected before React mounts on a dark OS. */
 @media (prefers-color-scheme:dark) {
-  :root:not([data-theme]) {color-scheme:dark;--app-bg:#172437;--surface:#203149;--surface-2:#293c55;
-    --surface-3:#344a65;--text:#eef4fc;--muted:#c0cede;--border:#526780;
+  :root:not([data-theme]) {color-scheme:dark;--app-bg:#141e2c;--surface:#1d293a;--surface-2:#27364a;
+    --surface-3:#34475d;--text:#eef4fc;--muted:#c0cede;--border:#4d6279;
     --blue:#83b6ee;--blue-contrast:#10253b;--focus:#a8ccff;
     --lecture-bg:#29445f;--lecture-accent:#9ecbfb;--lecture-text:#e4f1ff;
     --practice-bg:#52442d;--practice-accent:#f6d08a;--practice-text:#fff1d4;
-    --lab-bg:#5a3c43;--lab-accent:#f3b4b1;--lab-text:#ffe9e7;
+    --lab-bg:#28434b;--lab-accent:#91d0c9;--lab-text:#e1f8f5;
     --exam-bg:#4b3a57;--exam-accent:#d9bee8;--exam-text:#f6e8ff;
     --other-bg:#304951;--other-accent:#a2d4d8;--other-text:#e5f8f8;}
 }
@@ -390,4 +390,79 @@ a {color:var(--blue)}
   .week-grid .lesson-title {font-size:16px;line-height:1.35;}
   .week-grid .inline-person,.week-grid .inline-room {font-size:14px;min-height:44px;}
   .week-grid .type-label {font-size:12px;}
+}
+
+/* v13 -- single, deliberate layout hierarchy; source metadata never squeezed to letters. */
+.app-container {padding-bottom:calc(22px + env(safe-area-inset-bottom));}
+.subject-details {flex:1 1 auto;min-width:0;}
+.entity-selection {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.entity-selection h1 {overflow-wrap:break-word;word-break:normal;hyphens:manual;}
+.change-entity {display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:7px 12px;
+ border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+ border-radius:11px;font-size:14px;font-weight:500;white-space:nowrap;}
+.change-entity:hover {background:var(--surface-3);}
+.lesson-card {overflow:visible;align-items:stretch;}
+.lesson-main {display:flex;flex-direction:column;min-width:0;min-height:100%;}
+.lesson-title {font-weight:550;line-height:1.4;word-break:normal;overflow-wrap:break-word;hyphens:manual;}
+.lesson-meta {margin-top:auto;padding-top:9px;}
+.lesson-card .inline-person,.lesson-card .inline-room {width:100%;min-height:36px;
+ overflow-wrap:break-word;word-break:normal;hyphens:manual;line-height:1.4;}
+.lesson-card .inline-person span,.lesson-card .inline-room span {overflow-wrap:break-word;word-break:normal;hyphens:manual;}
+.lesson-card .inline-room {width:fit-content;max-width:100%;margin-left:auto;
+ align-self:flex-end;justify-content:flex-end;text-align:right;}
+.lesson-card .inline-room span {text-align:right;}
+.subgroup-meta {display:flex;flex-direction:column;align-items:stretch;min-width:0;}
+.subgroup-meta .inline-room {align-self:flex-end;margin-left:auto;}
+.subgroups-note {color:var(--lesson-text);opacity:.88;font-size:13px;line-height:1.45;margin:7px 0 4px;}
+.lesson-time {font-weight:450;opacity:.82;}
+.lesson-topline {margin-bottom:7px;}
+.week-heading {display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+ padding:10px 14px;gap:2px;text-align:left;border-width:1px 1px 1px 4px;
+ border-left-color:var(--blue);font-size:15px;line-height:1.25;}
+.week-heading strong {font-size:16px;font-weight:650;letter-spacing:.035em;}
+.week-heading small {font-size:12px;font-weight:450;opacity:.9;}
+.week-heading.selected {border-color:var(--blue);border-left-color:var(--blue);}
+.week-heading:not(.selected):hover {background:var(--surface-3);}
+.week-heading[aria-pressed='true'] {outline-offset:2px;}
+.week-cards {display:flex;flex-direction:column;gap:8px;padding-top:8px;}
+.desktop-week-label {display:none;min-height:65px;align-items:center;justify-content:center;
+ font-weight:600;font-size:16px;color:var(--text);flex:1;text-align:center;}
+@media (max-width:899px) {
+ .subject-row {align-items:flex-start;}
+ .entity-selection {gap:4px 8px;}
+ .change-entity {font-size:13px;min-height:44px;}
+ .lesson-card .inline-room {grid-column:auto;}
+}
+@media (min-width:900px) {
+ .app-header {padding:26px 34px 0;}
+ .date-nav {max-width:none;margin:16px 34px 0;}
+ .date-nav .dates {display:none;}
+ .date-nav .date-arrow {display:grid;min-height:50px;}
+ .desktop-week-label {display:flex;min-height:50px;}
+ .date-nav .calendar-button {min-height:50px;}
+ .schedule-view {padding:18px 34px 34px;}
+ .week-grid .lesson-card {grid-template-columns:58px minmax(0,1fr);gap:8px;padding:14px 12px;}
+ .week-grid .lesson-main {display:flex;min-width:0;}
+ .week-grid .lesson-title {font-size:15px;}
+ .week-grid .lesson-meta,.week-grid .subgroup-meta {display:flex;flex-direction:column;align-items:stretch;}
+ .week-grid .inline-person,.week-grid .inline-room {min-width:0;max-width:100%;width:100%;font-size:13px;}
+ .week-grid .inline-room {width:fit-content;justify-content:flex-end;text-align:right;align-self:flex-end;margin-left:auto;}
+ .week-grid .lesson-time {font-size:13px;}
+ .week-grid .week-column {min-width:0;}
+ .week-grid .lesson-card {min-height:144px;}
+ .week-heading {width:100%;}
+}
+@media (min-width:1250px) {
+ .week-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+}
+@media (min-width:900px) and (max-width:1249px) {
+ .week-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+}
+
+/* Desktop week is an overview: day headings are labels, not fake selection buttons. */
+.desktop-week-title {display:none;}
+@media(min-width:900px) {
+ .mobile-day-title {display:none;}
+ .desktop-week-title {display:block;}
+ .week-heading {margin:0;background:var(--surface-2);border-color:var(--border);border-left-color:var(--blue);}
 }

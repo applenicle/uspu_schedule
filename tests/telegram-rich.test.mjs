@@ -38,12 +38,12 @@ test('premium IDs come from the verified custom emoji set and are attached to in
 test('premium main menu navigation remains short and functional',()=>{
  const keyboard=menuKeyboard('https://example.org/');
  const flat=keyboard.inline_keyboard.flat();
- assert.equal(flat.length,4);
- assert.equal(flat.filter(x=>x.icon_custom_emoji_id).length,4);
- assert.equal(flat.find(x=>x.text==='Расписание группы').callback_data,'m|group');
- assert.equal(flat.find(x=>x.text==='Преподаватели').callback_data,'m|teacher');
+ assert.equal(flat.length,2);
+ assert.equal(flat.filter(x=>x.icon_custom_emoji_id).length,2);
+ assert.equal(flat.find(x=>x.text==='Найти расписание').callback_data,'m|find');
+ assert.equal(flat.find(x=>x.text==='Открыть приложение').style,'success');
  assert.deepEqual(flat.find(x=>x.text==='Открыть приложение').web_app,{url:'https://example.org/'});
- assert.equal(parseMenuCallback('m|teacher'),'teacher');
+ assert.equal(parseMenuCallback('m|find'),'find');
  assert.equal(parseMenuCallback('m|home'),'home');
  assert.equal(parseMenuCallback('s|g|2026-11-09|ДГ-304'),null);
  assert.match(richHelp(),/\/teacher/);
@@ -54,8 +54,8 @@ test('schedule navigation and weekly callback are under 64 UTF8 bytes',()=>{
  assert.deepEqual(parseWeekCallback(callback),{kind:'group',id:'Дг-304'});
  assert.equal(weekCallbackData('group','А'.repeat(80)),null);
  const keys=scheduleKeyboard('group','Дг-304','2026-11-09');
- assert.equal(keys.inline_keyboard[0][0].text,'Пред. день');
- assert.equal(keys.inline_keyboard[1][1].text,'Неделя');
+ assert.equal(keys.inline_keyboard[0][0].text,'← День');
+ assert.equal(keys.inline_keyboard[1][0].text,'Неделя');
  for(const item of keys.inline_keyboard.flat()) if(item.callback_data) assert.ok(Buffer.byteLength(item.callback_data)<65);
 });
 

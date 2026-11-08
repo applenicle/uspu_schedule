@@ -5,6 +5,8 @@ import { premiumButton as btn } from './telegram-rich.mjs';
 
 export const BOT_SITE = 'https://uspu-schedule.vercel.app/';
 
+export const isTeacherQuery = query => !/\d/u.test(String(query)) && /[А-Яа-яЁё]/u.test(String(query));
+
 /** Stateless parsing: no account, local bot profile or collection of chat IDs. */
 export function parseBotCommand(input = '') {
   const text = String(input).trim().slice(0, 200);
@@ -22,7 +24,7 @@ export function parseBotCommand(input = '') {
   if (teacher) return {type:'schedule',kind:'teacher',period:'today',query:teacher[1]};
   const group = text.match(/^(?:группа|расписание)\s*[:–-]?\s+(.+)$/iu);
   if (group) return {type:'schedule',kind:'group',period:'next',query:group[1]};
-  return {type:'schedule',kind:'group',period:'next',query:text};
+  return {type:'schedule',kind:isTeacherQuery(text)?'teacher':'group',period:'next',query:text};
 }
 
 export function nextTeachingDate(lessons, today=todayYekaterinburg()) {
@@ -60,47 +62,43 @@ export function parseCallbackData(raw='') {
   const match=String(raw).match(/^s\|(g|t)\|(\d{4}-\d{2}-\d{2})\|([^\r\n]{1,160})$/u);
   return match?{kind:match[1]==='t'?'teacher':'group',date:match[2],id:match[3]}:null;
 }
-export function weekCallbackData(kind,id) {
+export function weekCallbackData(kind,id,date='') {
   const code=kind==='teacher'?'t':'g';
-  const text=`w|${code}|${id}`;
+  const text=date?`w|${code}|${date}|${id}`:`w|${code}|${id}`;
   return Buffer.byteLength(text,'utf8')<=64?text:null;
 }
 export function parseWeekCallback(raw='') {
   const m=String(raw).match(/^w\|(g|t)\|([^\r\n]{1,160})$/u);
-  return m?{kind:m[1]==='t'?'teacher':'group',id:m[2]}:null;
+  if(!m)return null;
+  const contextual=m[2].match(/^(\d{4}-\d{2}-\d{2})\|(.+)$/u);
+  return contextual?{kind:m[1]==='t'?'teacher':'group',id:contextual[2],date:contextual[1]}:
+    {kind:m[1]==='t'?'teacher':'group',id:m[2]};
 }
 export function parseMenuCallback(raw='') {
-  const m=String(raw).match(/^m\|(home|group|teacher|help)$/u);
+  const m=String(raw).match(/^m\|(home|find|group|teacher|help)$/u);
   return m?.[1]||null;
 }
 
 export function menuKeyboard(site=BOT_SITE) {
   return {inline_keyboard:[
-    [btn('Расписание группы','calendar',{callback_data:'m|group'},'primary')],
-    [btn('Преподаватели','teacher',{callback_data:'m|teacher'}),btn('Помощь','help',{callback_data:'m|help'})],
-    [btn('Открыть приложение','globe',{web_app:{url:site}},'success')],
+    [btn('Найти расписание','search',{callback_data:'m|find'})],
+    [btn('Открыть приложение','globe',{web_app:{url:site}},'success')]
   ]};
 }
 export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg()) {
   const prev=callbackData(kind,id,shiftISO(date,-1));
   const next=callbackData(kind,id,shiftISO(date,1));
-  const week=weekCallbackData(kind,id);
+  const week=weekCallbackData(kind,id,date);
   const rows=[];
-  if(prev&&next) rows.push([
-    btn('Пред. день','back',{callback_data:prev}),
-    btn('След. день','next',{callback_data:next})
-  ]);
-  const todayCb=callbackData(kind,id,today);
-  const modes=[];
-  if(todayCb) modes.push(btn('Сегодня','calendar',{callback_data:todayCb},date===today?'primary':undefined));
-  if(week) modes.push(btn('Неделя','list',{callback_data:week}));
-  if(modes.length) rows.push(modes);
-  rows.push([btn('Меню','back',{callback_data:'m|home'}),btn('Приложение','globe',{web_app:{url:site}},'success')]);
+  if(prev&&next) rows.push([btn('← День','back',{callback_data:prev}),btn('День →','next',{callback_data:next})]);
+  if(week) rows.push([btn('Неделя','list',{callback_data:week}),btn('Найти','search',{callback_data:'m|find'})]);
+  rows.push([btn('Приложение','globe',{web_app:{url:site}},'success')]);
   return {inline_keyboard:rows};
 }
 export function greeting(site=BOT_SITE) {
-  return {text:'📚 <b>Расписание УрГПУ</b>\n\nНапиши название группы — например, <code>дг304</code>.\n\n<b>Команды:</b>\n/group ДГ-304 — ближайший день с занятиями\n/today ДГ-304 — сегодня\n/tomorrow ДГ-304 — завтра\n/week ДГ-304 — вся неделя\n/teacher Иванова Анна Сергеевна — преподаватель\n\nРегистрация не требуется.',reply_markup:menuKeyboard(site)};
+  return {text:'<b>Расписание УрГПУ</b>\n\nОтправь название группы или фамилию преподавателя, например <code>дг304</code> или <code>Иванова</code>.',reply_markup:menuKeyboard(site)};
 }
+
 export function safeNormalizeGroup(name) {
   return normalizeGroup(name).slice(0,120);
 }

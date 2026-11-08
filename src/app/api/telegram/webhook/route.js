@@ -89,7 +89,7 @@ async function timetable(sql,kind,id,period,forcedDate,label) {
   const today=todayYekaterinburg();
   const date=forcedDate||periodDate(period,today,lessons);
   const title=label||id;
-  const html=period==='week'&&!forcedDate?richScheduleWeek(lessons,today,title,kind):richScheduleDay(lessons,date,title,kind);
+  const html=period==='week'?richScheduleWeek(lessons,forcedDate||today,title,kind):richScheduleDay(lessons,date,title,kind);
   return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today)};
 }
 function escapeText(s) {
@@ -111,9 +111,9 @@ async function prompt(chatId,kind) {
   const isTeacher=kind==='teacher';
   await telegram('sendMessage',{
     chat_id:chatId,
-    text:isTeacher?'Поиск преподавателя\n\nНапиши ФИО преподавателя в ответ на это сообщение.':
-      'Поиск группы\n\nНапиши название группы (например, ДГ-304) в ответ на это сообщение.',
-    reply_markup:{force_reply:true,input_field_placeholder:isTeacher?'Фамилия Имя Отчество':'Например, дг304',selective:true}
+    text:kind==='auto'?'Поиск расписания\n\nНапиши группу или ФИО преподавателя.':isTeacher?
+      'Поиск преподавателя\n\nНапиши ФИО преподавателя.':'Поиск группы\n\nНапиши название группы.',
+    reply_markup:{force_reply:true,input_field_placeholder:kind==='auto'?'ДГ-304 или Иванова':isTeacher?'Фамилия Имя Отчество':'Например, дг304',selective:true}
   });
 }
 export async function POST(request) {
@@ -135,8 +135,8 @@ export async function POST(request) {
     if(callback) {
       await telegram('answerCallbackQuery',{callback_query_id:callback.id});
       const menu=parseMenuCallback(callback.data);
-      if(menu==='group'||menu==='teacher') {
-        await prompt(chat.id,menu);
+      if(menu==='find'||menu==='group'||menu==='teacher') {
+        await prompt(chat.id,menu==='find'?'auto':menu);
         return ok();
       }
       if(menu==='home') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
@@ -146,14 +146,15 @@ export async function POST(request) {
         const week=parseWeekCallback(callback.data);
         if(!day&&!week) return ok();
         const choice=day||week;
-        content=await timetable(db(),choice.kind,choice.id,week?'week':'today',day?.date||null,choice.id);
+        content=await timetable(db(),choice.kind,choice.id,week?'week':'today',day?.date||week?.date||null,choice.id);
       }
       if(callback.message?.message_id) editId=callback.message.message_id;
     } else if(typeof message?.text==='string') {
       let parsed=parseBotCommand(message.text);
       // The ForceReply prompt identifies the kind without user accounts or server-side state.
       const repliedTo=message.reply_to_message?.text||'';
-      if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
+      if(repliedTo.startsWith('Поиск расписания') && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
+      else if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
       else if(repliedTo.startsWith('Поиск группы') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
       if(parsed.type==='help') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
       else if(parsed.type==='missing') {
