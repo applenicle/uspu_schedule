@@ -107,14 +107,11 @@ async function sendRich(chatId,content,editId) {
   }
   return safeTelegram('sendRichMessage',data);
 }
-/** A single small service message installs the Telegram reply keyboard below
- * the text input. The rich schedule retains its own inline day/week controls.
- * Telegram keeps this keyboard between subsequent rich messages.
- */
-async function installReplyKeyboard(chatId) {
+/** One /start reply installs the keyboard. Telegram keeps it for later messages. */
+async function welcome(chatId) {
   return safeTelegram('sendMessage',{
     chat_id:chatId,
-    text:'Быстрый доступ к расписанию',
+    text:'Расписание УрГПУ\n\nНапиши группу (ДГ-304) или фамилию преподавателя (Шмакова).',
     reply_markup:replyKeyboard(origin())
   });
 }
@@ -123,8 +120,8 @@ async function prompt(chatId,kind) {
   const isTeacher=kind==='teacher';
   await telegram('sendMessage',{
     chat_id:chatId,
-    text:kind==='auto'?'Поиск расписания\n\nНапиши группу или ФИО преподавателя.':isTeacher?
-      'Поиск преподавателя\n\nНапиши ФИО преподавателя.':'Поиск группы\n\nНапиши название группы.',
+    text:kind==='auto'?'Какое расписание показать?\nНапиши группу или фамилию преподавателя.':isTeacher?
+      'Напиши фамилию преподавателя.':'Напиши название группы.',
     reply_markup:{force_reply:true,input_field_placeholder:kind==='auto'?'ДГ-304 или Иванова':isTeacher?'Фамилия Имя Отчество':'Например, дг304',selective:true}
   });
 }
@@ -144,7 +141,6 @@ export async function POST(request) {
     if(chat?.type!=='private'||!Number.isSafeInteger(chat.id)) return ok();
     let content;
     let editId=null;
-    let showBottomKeyboard=false;
     if(callback) {
       const menu=parseMenuCallback(callback.data);
       const weekAction=parseWeekCallback(callback.data);
@@ -167,7 +163,7 @@ export async function POST(request) {
         await prompt(chat.id,menu==='find'?'auto':menu);
         return ok();
       }
-      if(menu==='home') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
+      if(menu==='home') {await welcome(chat.id);return ok();}
       else if(menu==='help') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parseTeacherChoiceData(callback.data)) {
         const sql=db();
@@ -195,13 +191,10 @@ export async function POST(request) {
       let parsed=parseBotCommand(message.text);
       // The ForceReply prompt identifies the kind without user accounts or server-side state.
       const repliedTo=message.reply_to_message?.text||'';
-      if(repliedTo.startsWith('Поиск расписания') && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
+      if((repliedTo.startsWith('Поиск расписания')||repliedTo.startsWith('Какое расписание')) && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
       else if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
       else if(repliedTo.startsWith('Поиск группы') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
-      if(parsed.type==='help') {
-        content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
-        showBottomKeyboard=true;
-      }
+      if(parsed.type==='help') {await welcome(chat.id);return ok();}
       else if(parsed.type==='instructions') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parsed.type==='missing') {
         await prompt(chat.id,parsed.command==='search'?'auto':parsed.command==='teacher'?'teacher':'group');
@@ -209,10 +202,7 @@ export async function POST(request) {
       } else {
         const sql=db();
         const found=await findCatalog(sql,parsed.kind,parsed.query);
-        if(found.item) {
-          content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
-          showBottomKeyboard=true;
-        }
+        if(found.item) content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
         else if(found.choices) {
           const rows=found.choices.map(item=>{
             const callback_data=teacherChoiceCallbackData(item.id);
@@ -227,11 +217,6 @@ export async function POST(request) {
       }
     } else return ok();
     await sendRich(chat.id,content,editId);
-    if(showBottomKeyboard) {
-      // Keyboard is supplemental: failure must not break the actual schedule.
-      try {await installReplyKeyboard(chat.id);}
-      catch(error) {console.warn('Reply keyboard unavailable:',error?.status||'unknown');}
-    }
     return ok();
   }catch(error) {
     console.error('Telegram rich webhook failed:',String(error?.message||'error').replace(/\d{7,}/g,'[redacted]'));

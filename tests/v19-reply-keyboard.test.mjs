@@ -13,28 +13,30 @@ test('reply keyboard stays under input with two clear action rows and app button
   assert.equal(board.is_persistent,true);
   assert.equal(board.resize_keyboard,true);
   assert.deepEqual(board.keyboard.map(r=>r.map(b=>b.text)),[
-    ['Расписание группы','Преподаватель'],['Сменить расписание','Открыть приложение']
+    ['Выбрать расписание'],['Открыть приложение']
   ]);
-  assert.equal(board.keyboard[1][1].web_app.url,'https://uspu-schedule.vercel.app/');
-  assert.equal(board.keyboard[1][1].style,'success');
+  assert.equal(board.keyboard[1][0].web_app.url,'https://uspu-schedule.vercel.app/');
+  assert.equal(board.keyboard[1][0].style,'success');
 });
 
 test('reply buttons resolve to actual search prompts, not mistaken teacher names',()=>{
   assert.equal(replyShortcut('Расписание группы'),'group');
   assert.equal(replyShortcut('ПРЕПОДАВАТЕЛЬ'),'teacher');
   assert.equal(replyShortcut('Сменить расписание'),'auto');
+  assert.equal(replyShortcut('Выбрать расписание'),'auto');
   assert.equal(replyShortcut('Дг-304'),null);
   const webhook=code();
   assert.match(webhook,/const shortcut=replyShortcut\(message\.text\)/);
   assert.match(webhook,/await prompt\(chat\.id,shortcut\)/);
 });
 
-test('reply keyboard is installed in addition to rich schedule without overwriting inline controls',()=>{
-  const webhook=code();
-  assert.match(webhook,/safeTelegram\('sendMessage',[\s\S]*reply_markup:replyKeyboard\(origin\(\)\)/);
-  assert.match(webhook,/await sendRich\(chat\.id,content,editId\);/);
-  assert.match(webhook,/if\(showBottomKeyboard\)/);
-  assert.match(webhook,/body\.reply_markup\?\.keyboard/);
+test('one /start reply installs keyboard, rich schedule does not generate extra bot messages',()=>{
+ const webhook=code();
+ assert.match(webhook,/async function welcome\(chatId\)/);
+ assert.match(webhook,/reply_markup:replyKeyboard\(origin\(\)\)/);
+ assert.match(webhook,/await sendRich\(chat\.id,content,editId\)/);
+ assert.doesNotMatch(webhook,/showBottomKeyboard|installReplyKeyboard|Быстрый доступ к расписанию/);
+ assert.match(webhook,/for\(const row of \[\.\.\.\(body\.reply_markup\?\.inline_keyboard/);
 });
 
 test('unknown subgroup numbers are not invented from group names, but each teacher remains visible',()=>{

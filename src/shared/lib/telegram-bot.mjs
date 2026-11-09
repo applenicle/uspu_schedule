@@ -98,14 +98,8 @@ export function parseMenuCallback(raw='') {
 export function replyKeyboard(site=BOT_SITE) {
   return {
     keyboard:[
-      [
-        {text:'Расписание группы',icon_custom_emoji_id:PREMIUM.group.id},
-        {text:'Преподаватель',icon_custom_emoji_id:PREMIUM.teacher.id}
-      ],
-      [
-        {text:'Сменить расписание',icon_custom_emoji_id:PREMIUM.search.id},
-        {text:'Открыть приложение',icon_custom_emoji_id:PREMIUM.globe.id,web_app:{url:site},style:'success'}
-      ]
+      [{text:'Выбрать расписание',icon_custom_emoji_id:PREMIUM.search.id}],
+      [{text:'Открыть приложение',icon_custom_emoji_id:PREMIUM.globe.id,web_app:{url:site},style:'success'}]
     ],
     is_persistent:true,
     resize_keyboard:true,
@@ -117,7 +111,7 @@ export function replyShortcut(text='') {
   const value=String(text).trim().toLocaleLowerCase('ru-RU');
   if(value==='расписание группы') return 'group';
   if(value==='преподаватель') return 'teacher';
-  if(value==='сменить расписание') return 'auto';
+  if(value==='сменить расписание'||value==='выбрать расписание') return 'auto';
   return null;
 }
 
