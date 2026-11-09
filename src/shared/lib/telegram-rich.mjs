@@ -43,8 +43,8 @@ function lessonBlock(card, kind) {
   const slot = time[1] ? `${time[0]}–${time[1]}` : time[0];
   const subject = esc(main.subject || 'Занятие');
   const meta = items.map(item => {
-    // Source may only say subgroup 0. Keep the parallel rows separate, not numbered.
-    const subgroup = items.length > 1 || item.subgroup ? `<b>${esc(item.displaySubgroup || item.subgroup + ' подгруппа')}</b><br/>` : '';
+    // Only source-confirmed subgroup numbers appear in messages.
+    const subgroup = item.subgroupVerified ? `<b>${esc(item.displaySubgroup)}</b><br/>` : '';
     const name = kind === 'teacher' ? item.group : item.teacher;
     const glyph = kind === 'teacher' ? 'group' : 'teacher';
     const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';
@@ -75,7 +75,7 @@ export function richScheduleDay(lessons, day, title='', kind='group', {compact=f
     }
     result+=(result===header?'':'<hr/>')+block;
   }
-  return result + (result.includes('Вариант ') ? '<footer>А/Б — условные варианты, не номера подгрупп УрГПУ.</footer>' : '');
+  return result;
 }
 
 export function richScheduleWeek(lessons,anchor,title='',kind='group') {
@@ -99,7 +99,7 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
     }
     found=true;
   }
-  return found ? html + (html.includes('Вариант ') ? '<footer>А/Б — условные варианты, не номера подгрупп УрГПУ.</footer>' : '') : `${html}<p>На этой неделе занятий нет.</p>`;
+  return found ? html : `${html}<p>На этой неделе занятий нет.</p>`;
 }
 
 export function richGreeting() {

@@ -25,21 +25,14 @@ export function withVerifiedSubgroup(record, assignments=verifiedSubgroupAssignm
 }
 
 
-/** Presentation-only labels. Never translate a missing/zero official subgroup
- *  to numeric 1 or 2: different teaching staff can swap between periods.
- *  Stable alphabetical labels identify the *parallel option* on that card.
+/** Only official or explicitly verified subgroup numbers are displayed.
+ *  Missing or zero values are not evidence of subgroup 1 or 2.
+ *  Parallel teachers remain separate in the UI and in Telegram.
  */
 export function presentedSubgroups(items=[]) {
-  const key = entry => [entry.teacher||'',entry.group||'',entry.room||'']
-    .map(normal).join('|');
-  const unknownKeys=[...new Set(items.filter(entry=>!(/^[1-9]\d*$/u.test(String(entry.subgroup||'')))).map(key))].sort((a,b)=>a.localeCompare(b,'ru'));
-  const symbols=['А','Б','В','Г','Д','Е','Ж','З'];
   return items.map(entry=>{
     const official=String(entry.subgroup||'');
-    if (/^[1-9]\d*$/u.test(official))
-      return {...entry,displaySubgroup:`${official} подгруппа`,subgroupVerified:true};
-    const index=unknownKeys.indexOf(key(entry));
-    const suffix=symbols[index]||String(index+1);
-    return {...entry,displaySubgroup:`Вариант ${suffix}`,subgroupVerified:false};
+    const confirmed=/^[1-9]\d*$/u.test(official);
+    return {...entry,displaySubgroup:confirmed?`${official} подгруппа`:'',subgroupVerified:confirmed};
   });
 }

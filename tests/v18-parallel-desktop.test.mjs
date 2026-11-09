@@ -8,18 +8,18 @@ const base={date:'2026-11-10',time:'10:15 - 11:45',subject:'Веб-дизайн'
 const second={...base,teacher:'Ченушкина Светлана Владимировна'};
 const read=name=>readFileSync(new URL(name,import.meta.url),'utf8');
 
-test('parallel options have stable alphabetical identifiers, but never fake 1/2',()=>{
+test('parallel lessons keep both teachers without fictional variants or subgroup numbers',()=>{
  const first=lessonsToCards([base,second],base.date)[0].items;
  const reversed=lessonsToCards([second,base],base.date)[0].items;
  assert.deepEqual(first.map(item=>item.teacher),reversed.map(item=>item.teacher));
- assert.deepEqual(first.map(item=>item.displaySubgroup),['Вариант А','Вариант Б']);
+ assert.deepEqual(first.map(item=>item.displaySubgroup),['','']);
  assert.ok(first.every(item=>item.subgroupVerified===false));
  const day=richScheduleDay([base,second],base.date,'ДГ-304');
- assert.match(day,/Вариант А/);
- assert.match(day,/Вариант Б/);
+ assert.match(day,/Ченушкина/);
+ assert.match(day,/Шмакова/);
  assert.doesNotMatch(day,/[12] подгруппа/);
- assert.match(day,/условные варианты/);
- assert.match(richScheduleWeek([base,second],base.date,'ДГ-304'),/Вариант А/);
+ assert.doesNotMatch(day,/Вариант|условные варианты/);
+ assert.doesNotMatch(richScheduleWeek([base,second],base.date,'ДГ-304'),/Вариант|условные варианты/);
 });
 
 test('verified numbers override provisional options and retain teacher mapping',()=>{

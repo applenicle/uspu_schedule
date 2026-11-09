@@ -1,7 +1,7 @@
 import { shiftISO, startOfWeek, normalizeGroup } from './schedule-utils.mjs';
 import { todayYekaterinburg } from './date.js';
 import { formatTelegramDay, telegramEscape } from './telegram-format.mjs';
-import { premiumButton as btn } from './telegram-rich.mjs';
+import { premiumButton as btn, PREMIUM } from './telegram-rich.mjs';
 import { scheduleLink } from './schedule-link.mjs';
 
 export const BOT_SITE = 'https://uspu-schedule.vercel.app/';
@@ -90,6 +90,35 @@ export function parseTeacherChoiceData(raw='') {
 export function parseMenuCallback(raw='') {
   const m=String(raw).match(/^m\|(home|find|group|teacher|help)$/u);
   return m?.[1]||null;
+}
+
+/** ReplyKeyboardMarkup sits above the message composer, unlike inline buttons.
+ *  Every label is an explicit action; no account/session state is required.
+ */
+export function replyKeyboard(site=BOT_SITE) {
+  return {
+    keyboard:[
+      [
+        {text:'Расписание группы',icon_custom_emoji_id:PREMIUM.group.id},
+        {text:'Преподаватель',icon_custom_emoji_id:PREMIUM.teacher.id}
+      ],
+      [
+        {text:'Сменить расписание',icon_custom_emoji_id:PREMIUM.search.id},
+        {text:'Открыть приложение',icon_custom_emoji_id:PREMIUM.globe.id,web_app:{url:site},style:'success'}
+      ]
+    ],
+    is_persistent:true,
+    resize_keyboard:true,
+    input_field_placeholder:'Группа или фамилия преподавателя'
+  };
+}
+
+export function replyShortcut(text='') {
+  const value=String(text).trim().toLocaleLowerCase('ru-RU');
+  if(value==='расписание группы') return 'group';
+  if(value==='преподаватель') return 'teacher';
+  if(value==='сменить расписание') return 'auto';
+  return null;
 }
 
 export function menuKeyboard(site=BOT_SITE) {

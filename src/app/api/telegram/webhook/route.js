@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
 import { todayYekaterinburg } from '@/shared/lib/date';
-import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData } from '@/shared/lib/telegram-bot.mjs';
+import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, replyKeyboard, replyShortcut, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData } from '@/shared/lib/telegram-bot.mjs';
 import { richScheduleDay, richScheduleWeek, richGreeting, richHelp, richNotice, premiumButton, withoutPremium } from '@/shared/lib/telegram-rich.mjs';
 import { uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
 
@@ -34,8 +34,8 @@ async function telegram(method,data) {
 function removePremiumFields(data) {
   const body=structuredClone(data);
   if(body.rich_message?.html) body.rich_message.html=withoutPremium(body.rich_message.html);
-  for(const row of (body.reply_markup?.inline_keyboard||[])) {
-    for(const button of row) delete button.icon_custom_emoji_id;
+  for(const row of [...(body.reply_markup?.inline_keyboard||[]),...(body.reply_markup?.keyboard||[])]) {
+    for(const button of row) if(button&&typeof button==='object') delete button.icon_custom_emoji_id;
   }
   return body;
 }
@@ -107,6 +107,18 @@ async function sendRich(chatId,content,editId) {
   }
   return safeTelegram('sendRichMessage',data);
 }
+/** A single small service message installs the Telegram reply keyboard below
+ * the text input. The rich schedule retains its own inline day/week controls.
+ * Telegram keeps this keyboard between subsequent rich messages.
+ */
+async function installReplyKeyboard(chatId) {
+  return safeTelegram('sendMessage',{
+    chat_id:chatId,
+    text:'Быстрый доступ к расписанию',
+    reply_markup:replyKeyboard(origin())
+  });
+}
+
 async function prompt(chatId,kind) {
   const isTeacher=kind==='teacher';
   await telegram('sendMessage',{
@@ -132,6 +144,7 @@ export async function POST(request) {
     if(chat?.type!=='private'||!Number.isSafeInteger(chat.id)) return ok();
     let content;
     let editId=null;
+    let showBottomKeyboard=false;
     if(callback) {
       const menu=parseMenuCallback(callback.data);
       const weekAction=parseWeekCallback(callback.data);
@@ -174,13 +187,21 @@ export async function POST(request) {
       // Re-editing the old day/menu message can appear as an ignored tap in clients.
       if(!weekAction&&callback.message?.message_id) editId=callback.message.message_id;
     } else if(typeof message?.text==='string') {
+      const shortcut=replyShortcut(message.text);
+      if(shortcut) {
+        await prompt(chat.id,shortcut);
+        return ok();
+      }
       let parsed=parseBotCommand(message.text);
       // The ForceReply prompt identifies the kind without user accounts or server-side state.
       const repliedTo=message.reply_to_message?.text||'';
       if(repliedTo.startsWith('Поиск расписания') && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
       else if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
       else if(repliedTo.startsWith('Поиск группы') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
-      if(parsed.type==='help') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
+      if(parsed.type==='help') {
+        content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
+        showBottomKeyboard=true;
+      }
       else if(parsed.type==='instructions') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parsed.type==='missing') {
         await prompt(chat.id,parsed.command==='search'?'auto':parsed.command==='teacher'?'teacher':'group');
@@ -188,7 +209,10 @@ export async function POST(request) {
       } else {
         const sql=db();
         const found=await findCatalog(sql,parsed.kind,parsed.query);
-        if(found.item) content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
+        if(found.item) {
+          content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
+          showBottomKeyboard=true;
+        }
         else if(found.choices) {
           const rows=found.choices.map(item=>{
             const callback_data=teacherChoiceCallbackData(item.id);
@@ -203,6 +227,11 @@ export async function POST(request) {
       }
     } else return ok();
     await sendRich(chat.id,content,editId);
+    if(showBottomKeyboard) {
+      // Keyboard is supplemental: failure must not break the actual schedule.
+      try {await installReplyKeyboard(chat.id);}
+      catch(error) {console.warn('Reply keyboard unavailable:',error?.status||'unknown');}
+    }
     return ok();
   }catch(error) {
     console.error('Telegram rich webhook failed:',String(error?.message||'error').replace(/\d{7,}/g,'[redacted]'));

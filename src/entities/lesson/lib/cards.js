@@ -12,6 +12,6 @@ export function lessonsToCards(lessons, day, context = {}) {
       buckets.get(key).push(item);
     }
   });
-  return [...buckets.entries()].map(([key,items])=>({key,items:presentedSubgroups(items).sort((a,b)=>a.displaySubgroup.localeCompare(b.displaySubgroup,'ru',{numeric:true})), main:items[0], time:splitTimes(items[0].time)}))
+  return [...buckets.entries()].map(([key,items])=>({key,items:presentedSubgroups(items).sort((a,b)=>a.displaySubgroup.localeCompare(b.displaySubgroup,'ru',{numeric:true}) || String(a.teacher||'').localeCompare(String(b.teacher||''),'ru') || String(a.room||'').localeCompare(String(b.room||''),'ru')), main:items[0], time:splitTimes(items[0].time)}))
     .sort((a,b)=>a.time[0].localeCompare(b.time[0])||a.main.subject.localeCompare(b.main.subject));
 }
