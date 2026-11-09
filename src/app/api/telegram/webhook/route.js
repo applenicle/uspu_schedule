@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
 import { todayYekaterinburg } from '@/shared/lib/date';
-import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, replyKeyboard, replyShortcut, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData } from '@/shared/lib/telegram-bot.mjs';
+import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, replyKeyboard, replyShortcut, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData, needsTeacherNameLookup, scheduleDisplayName } from '@/shared/lib/telegram-bot.mjs';
 import { richScheduleDay, richScheduleWeek, richGreeting, richHelp, richNotice, premiumButton, withoutPremium } from '@/shared/lib/telegram-rich.mjs';
 import { uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
 
@@ -88,7 +88,14 @@ async function timetable(sql,kind,id,period,forcedDate,label) {
   const lessons=Array.isArray(rows[0].payload)?rows[0].payload:[];
   const today=todayYekaterinburg();
   const date=forcedDate||periodDate(period,today,lessons);
-  const title=label||id;
+  // Calendar callbacks carry numeric teacher IDs, not display names.
+  // Resolve the human-readable FIO every time a callback lacks its label.
+  let catalogLabel='';
+  if (needsTeacherNameLookup(kind,id,label)) {
+    const teacher=await sql`SELECT label FROM catalog WHERE kind='teacher' AND id=${id} LIMIT 1`;
+    catalogLabel=teacher[0]?.label || '';
+  }
+  const title=scheduleDisplayName(kind,id,label,catalogLabel);
   const html=period==='week'?richScheduleWeek(lessons,forcedDate||today,title,kind):richScheduleDay(lessons,date,title,kind);
   return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today,period==='week'?'week':'day',title)};
 }

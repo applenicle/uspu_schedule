@@ -42,7 +42,7 @@ test('Telegram day and week show same 1/2 labels and separate lesson type',()=>{
   for(const markup of [richScheduleDay([one,two],base.date,base.group),richScheduleWeek([one,two],base.date,base.group)]) {
     assert.match(markup,/1 подгруппа/);
     assert.match(markup,/2 подгруппа/);
-    assert.match(markup,/<p>Лабораторная<\/p>/);
+    assert.match(markup,/<p><i>Лабораторная<\/i><\/p>/);
     assert.doesNotMatch(markup,/Вариант А|Вариант Б/);
   }
 });

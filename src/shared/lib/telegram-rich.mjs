@@ -53,7 +53,7 @@ function lessonBlock(card, kind) {
   }).join('');
   const people = meta ? `<ul>${meta}</ul>` : '';
   // RichMessage heading + quotation visually distinguish one period from the next.
-  return `<h3>${esc(slot)}</h3><blockquote><p><b>${subject}</b></p><p>${esc(category.label)}</p>${people}</blockquote>`;
+  return `<h3>${esc(slot)}</h3><blockquote><p><b>${subject}</b></p><p><i>${esc(category.label)}</i></p>${people}</blockquote>`;
 }
 
 function dayHeading(day) {

@@ -6,6 +6,22 @@ import { scheduleLink } from './schedule-link.mjs';
 
 export const BOT_SITE = 'https://uspu-schedule.vercel.app/';
 
+/** A teacher's numeric catalog key must never become the visible timetable title.
+ *  Callback_data remains the stable numeric ID, while labels are resolved
+ *  on the server from the public catalog. Group names are never translated.
+ */
+export function needsTeacherNameLookup(kind, id, label='') {
+  return kind==='teacher' && /^\d{1,15}$/u.test(String(id)) &&
+    (!String(label||'').trim() || String(label).trim()===String(id));
+}
+export function scheduleDisplayName(kind, id, label='', catalogLabel='') {
+  const current=String(label||'').trim();
+  if(needsTeacherNameLookup(kind,id,current)) {
+    return String(catalogLabel||'').trim() || 'Преподаватель';
+  }
+  return current || (kind==='teacher'?'Преподаватель':String(id||''));
+}
+
 export const isTeacherQuery = query => !/\d/u.test(String(query)) && /[А-Яа-яЁё]/u.test(String(query));
 
 /** Stateless parsing: no account, local bot profile or collection of chat IDs. */
