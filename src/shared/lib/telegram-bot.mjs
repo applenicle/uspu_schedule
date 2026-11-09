@@ -2,6 +2,7 @@ import { shiftISO, startOfWeek, normalizeGroup } from './schedule-utils.mjs';
 import { todayYekaterinburg } from './date.js';
 import { formatTelegramDay, telegramEscape } from './telegram-format.mjs';
 import { premiumButton as btn } from './telegram-rich.mjs';
+import { scheduleLink } from './schedule-link.mjs';
 
 export const BOT_SITE = 'https://uspu-schedule.vercel.app/';
 
@@ -98,7 +99,7 @@ export function menuKeyboard(site=BOT_SITE) {
   ]};
 }
 /** Different controls for day and week; never show a no-op Week button on a week. */
-export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg(),mode='day') {
+export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg(),mode='day',label='') {
   const rows=[];
   if(mode==='week') {
     const anchor=startOfWeek(date);
@@ -126,7 +127,7 @@ export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterin
       btn('Другое расписание','search',{callback_data:'m|find'})
     ]);
   }
-  rows.push([btn('Открыть приложение','globe',{web_app:{url:site}},'success')]);
+  rows.push([btn('Открыть приложение','globe',{web_app:{url:scheduleLink(site,kind,id,label)}},'success')]);
   return {inline_keyboard:rows};
 }
 export function greeting(site=BOT_SITE) {

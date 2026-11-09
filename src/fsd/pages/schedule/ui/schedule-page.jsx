@@ -17,6 +17,7 @@ import { getSchedule, requestSchedule } from '@/entities/schedule/api/schedule-a
 import { queryCatalog } from '@/entities/catalog/api/catalog-api';
 import { teacherSurname, uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
 import { useDeviceTheme } from '@/features/theme-switch/model/use-device-theme';
+import { readScheduleLink, scheduleLink } from '@/shared/lib/schedule-link.mjs';
 
 export function SchedulePage() {
   const [demo,setDemo]=useState(false);
@@ -41,7 +42,9 @@ export function SchedulePage() {
     const inDemo=url.searchParams.get('demo')==='1';
     setDemo(inDemo);
     const date=todayYekaterinburg();setToday(date);setDay(date);
-    if(inDemo) setSelected(demoCatalog.find(x=>x.kind==='group'&&x.id==='ДГ-304'));
+    const link=readScheduleLink(url.search);
+    if (link) {setSelected(link);setKind(link.kind);setSearchKind(link.kind);}
+    else if(inDemo) setSelected(demoCatalog.find(x=>x.kind==='group'&&x.id==='ДГ-304'));
     else {
       try {
         const saved=JSON.parse(localStorage.getItem('uspu:selected'));
@@ -75,7 +78,12 @@ export function SchedulePage() {
     if(!selected||demo) return;
     try {localStorage.setItem('uspu:selected',JSON.stringify(selected));}catch{}
   },[selected,demo]);
-  function choose(item) {setKind(item.kind);setSearchKind(item.kind);setSelected(item);setDialog(null);setTeacher('');setSearchTerm('');setDay(today);}
+  function choose(item) {
+    setKind(item.kind);setSearchKind(item.kind);setSelected(item);setDialog(null);setTeacher('');setSearchTerm('');setDay(today);
+    if (!demo && typeof window!=='undefined') {
+      try { window.history.replaceState(window.history.state,'',scheduleLink(window.location.href,item.kind,item.id,item.label)); } catch {}
+    }
+  }
   function selectKind(value) {
     setSearchKind(value);setSearchTerm('');setDialog('search');setTeacher('');
   }
@@ -113,7 +121,7 @@ export function SchedulePage() {
       {selected ? <>
         <DateStrip selected={day} today={today} onSelect={setDay}/>
         {error&&<div className="error-banner" role="alert">{error}</div>}
-        <ScheduleView lessons={lessons} selected={day} mode={kind} onTeacher={onTeacher}
+        <ScheduleView lessons={lessons} selected={day} mode={kind} entityId={selected?.id} onTeacher={onTeacher}
           onGroup={group=>group&&resolveAndChoose('group',group)}
           onRoom={room=>room&&resolveAndChoose('room',room)} onDay={setDay}
           loading={loading} pending={pending} sourceUpdated={sourceUpdated}/>

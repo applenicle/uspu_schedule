@@ -49,8 +49,8 @@ test('web UI uses category selection and keeps rooms readable',()=>{
  const search=read('../src/features/catalog-search/ui/catalog-search.jsx');
  const style=read('../src/app/globals.css');
  const lesson=read('../src/entities/lesson/ui/lesson-card.jsx');
- assert.match(header,/selected&&<div className="subject-row"/);
- assert.match(header,/Другая группа/);
+ assert.match(header,/selected&&<div className="subject-block"/);
+ assert.match(header,/Сменить группу/);
  assert.match(search,/search-kind-tabs/);
  assert.match(search,/setActiveKind\(id\)/);
  assert.match(style,/\.week-grid \.lesson-card \.subgroup-meta \.inline-room/);

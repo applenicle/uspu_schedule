@@ -44,8 +44,7 @@ function lessonBlock(card, kind) {
   const subject = esc(main.subject || 'Занятие');
   const meta = items.map(item => {
     // Source may only say subgroup 0. Keep the parallel rows separate, not numbered.
-    const subgroup = /^[1-9]\d*$/u.test(String(item.subgroup||''))
-      ? `<b>${esc(item.subgroup)} подгруппа</b><br/>` : '';
+    const subgroup = items.length > 1 || item.subgroup ? `<b>${esc(item.displaySubgroup || item.subgroup + ' подгруппа')}</b><br/>` : '';
     const name = kind === 'teacher' ? item.group : item.teacher;
     const glyph = kind === 'teacher' ? 'group' : 'teacher';
     const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';
@@ -62,7 +61,7 @@ function dayHeading(day) {
 }
 
 export function richScheduleDay(lessons, day, title='', kind='group', {compact=false}={}) {
-  const cards = lessonsToCards(lessons,day);
+  const cards = lessonsToCards(lessons,day,kind==='group'?{group:title}:{});
   const header = compact ? dayHeading(day) :
     `<h2>${richEmoji('calendar')} ${esc(title||'Расписание УрГПУ')}</h2>${dayHeading(day)}`;
   if(!cards.length) return `${header}<p>Занятий нет.</p>`;
@@ -76,7 +75,7 @@ export function richScheduleDay(lessons, day, title='', kind='group', {compact=f
     }
     result+=(result===header?'':'<hr/>')+block;
   }
-  return result;
+  return result + (result.includes('Вариант ') ? '<footer>А/Б — условные варианты, не номера подгрупп УрГПУ.</footer>' : '');
 }
 
 export function richScheduleWeek(lessons,anchor,title='',kind='group') {
@@ -85,7 +84,7 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
   let found=false;
   for(let offset=0;offset<7;offset++) {
     const day=shiftISO(start,offset);
-    const cards=lessonsToCards(lessons,day);
+    const cards=lessonsToCards(lessons,day,kind==='group'?{group:title}:{});
     if(!cards.length) continue;
     const heading=`<hr/>${dayHeading(day)}`;
     if (bytes(html+heading)>30000) break;
@@ -100,7 +99,7 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
     }
     found=true;
   }
-  return found?html:`${html}<p>На этой неделе занятий нет.</p>`;
+  return found ? html + (html.includes('Вариант ') ? '<footer>А/Б — условные варианты, не номера подгрупп УрГПУ.</footer>' : '') : `${html}<p>На этой неделе занятий нет.</p>`;
 }
 
 export function richGreeting() {

@@ -25,7 +25,7 @@ export function LessonCard({ card, mode, onTeacher, onGroup, onRoom }) {
       <div className="lesson-title">{main.subject}</div>
       {multiple ? <div className="subgroups" aria-label="Параллельные занятия">
         {items.map((entry,i)=><div className="subgroup" key={`${entry.teacher}-${entry.room}-${i}`}>
-          {entry.subgroup&&<span className="subgroup-index">{entry.subgroup} подгруппа</span>}
+          <span className="subgroup-index" title={entry.subgroupVerified ? 'Номер из расписания УрГПУ' : 'Условная метка: номер подгруппы не указан в источнике'}>{entry.displaySubgroup}</span>
           <div className="subgroup-meta">
             <button title={entry.teacher} className="inline-person" onClick={()=>mode==='teacher'?onGroup(entry.group):onTeacher(entry.teacher)}>
               {mode==='teacher'?<Users size={15} aria-hidden="true"/>:<UserRound size={15} aria-hidden="true"/>}

@@ -29,7 +29,7 @@ test('web cards show only real subgroup numbers, without a misleading fallback c
  const jsx=read('../src/entities/lesson/ui/lesson-card.jsx');
  const css=read('../src/app/globals.css');
  assert.doesNotMatch(jsx,/Параллельные занятия · номер подгруппы не указан/);
- assert.match(jsx,/entry.subgroup&&/);
+ assert.match(jsx,/entry.displaySubgroup/);
  assert.match(css,/--lab-bg: #dceeea/);
  assert.match(css,/--lab-bg: #28434b/);
  assert.match(css,/week-heading strong/);

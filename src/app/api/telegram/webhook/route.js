@@ -90,7 +90,7 @@ async function timetable(sql,kind,id,period,forcedDate,label) {
   const date=forcedDate||periodDate(period,today,lessons);
   const title=label||id;
   const html=period==='week'?richScheduleWeek(lessons,forcedDate||today,title,kind):richScheduleDay(lessons,date,title,kind);
-  return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today,period==='week'?'week':'day')};
+  return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today,period==='week'?'week':'day',title)};
 }
 function escapeText(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

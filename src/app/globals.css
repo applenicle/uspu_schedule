@@ -600,3 +600,56 @@ a {color:var(--blue)}
   font: inherit; cursor: pointer;
 }
 .search-hint .search-retry:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+
+/* v18: clean entity hierarchy; mobile switch is a single full-width action. */
+.subject-block { min-width:0; }
+.subject-block .subject-row { margin-bottom:8px; }
+.subject-block .entity-selection { display:block; }
+.subject-block .entity-selection h1 { max-width:100%;overflow-wrap:break-word; }
+.subject-block > .change-entity { font-size:14px;gap:18px;min-height:48px;justify-content:space-between;padding:10px 16px; }
+@media (min-width:900px) {
+  .subject-block > .change-entity {width:auto;}
+}
+@media (max-width:899px) {
+  .subject-block { width:100%; }
+  .subject-block > .change-entity { display:flex;width:100%; }
+  .subject-block .subject-row { align-items:start; }
+  .subject-block .entity-selection h1 { font-size:clamp(23px,6vw,30px); }
+}
+/* For unnumbered parallel records, distinguish each row without falsely assigning 1/2. */
+.lesson-card .subgroup-index { display:inline-block;margin-bottom:4px; }
+
+
+/* v18: deliberate desktop-first weekly layout, with a readable day option.
+   One card = one stacking context. No squeezed two-column metadata on desktop. */
+.desktop-schedule-actions {display:none;align-items:center;gap:12px;}
+.desktop-view-tabs {display:flex;align-items:center;gap:4px;padding:4px;border-radius:13px;background:var(--surface-2);border:1px solid var(--border);}
+.desktop-view-tabs button {min-width:76px;min-height:44px;padding:7px 12px;color:var(--text);background:transparent;border:0;border-radius:10px;font:inherit;font-size:14px;cursor:pointer;}
+.desktop-view-tabs button[aria-pressed='true'] {background:var(--blue);color:var(--blue-contrast);font-weight:600;}
+@media (min-width:900px) {
+  .app-container {max-width:1500px;}
+  .subject-block {display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+  .subject-block .subject-row {margin:0;flex:0 1 auto;min-width:0;}
+  .subject-block > .change-entity {margin:0;align-self:center;}
+  .desktop-schedule-actions {display:flex;}
+  .schedule-view .mobile-lessons {display:none;}
+  .schedule-view .week-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:16px;align-items:start;}
+  .schedule-view .week-column {min-width:0;}
+  .schedule-view .week-cards {gap:8px;}
+  .schedule-view .week-grid .lesson-card {display:flex;flex-direction:column;gap:8px;min-height:0;padding:16px;border-radius:17px;}
+  .schedule-view .week-grid .lesson-time {display:flex;flex-direction:row;align-items:baseline;gap:9px;border-right:0;border-bottom:1px solid color-mix(in srgb,var(--lesson-accent) 32%,transparent);padding:0 0 8px;font-size:14px;}
+  .schedule-view .week-grid .lesson-time .time-end::before {content:'—';display:inline-block;margin-right:9px;opacity:.6;}
+  .schedule-view .week-grid .lesson-title {font-size:16px;line-height:1.42;}
+  .schedule-view .week-grid .lesson-meta,.schedule-view .week-grid .subgroup-meta {gap:3px;}
+  .schedule-view .week-grid .inline-room,.schedule-view .week-grid .inline-person {font-size:14px;min-height:44px;margin:0;align-self:flex-start;text-align:left;justify-content:flex-start;}
+  .schedule-view .week-grid .inline-room span {text-align:left;}
+  .schedule-view .week-heading {padding:12px 15px;background:var(--surface-2);border:1px solid var(--border);border-left:4px solid var(--blue);min-height:68px;}
+  .schedule-view .week-heading[aria-current='date'] {background:var(--surface-3);}
+  .schedule-view.desktop-mode-day .week-grid {display:none;}
+  .schedule-view.desktop-mode-day .mobile-lessons {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,390px),1fr));gap:12px;align-items:stretch;}
+  .schedule-view.desktop-mode-day .lesson-card {min-height:176px;}
+  .desktop-schedule-actions .count-note {white-space:nowrap;}
+}
+@media (min-width:900px) and (max-width:1050px) {
+  .schedule-view .week-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
