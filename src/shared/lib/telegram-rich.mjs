@@ -43,8 +43,9 @@ function lessonBlock(card, kind) {
   const slot = time[1] ? `${time[0]}–${time[1]}` : time[0];
   const subject = esc(main.subject || 'Занятие');
   const meta = items.map(item => {
-    // In source HTML, "Подгруппа: 0" is unspecified; don't assign numbers.
-    const subgroup = item.subgroup ? `<b>${esc(item.subgroup)} подгруппа</b><br/>` : '';
+    // Source may only say subgroup 0. Keep the parallel rows separate, not numbered.
+    const subgroup = /^[1-9]\d*$/u.test(String(item.subgroup||''))
+      ? `<b>${esc(item.subgroup)} подгруппа</b><br/>` : '';
     const name = kind === 'teacher' ? item.group : item.teacher;
     const glyph = kind === 'teacher' ? 'group' : 'teacher';
     const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';

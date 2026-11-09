@@ -90,7 +90,7 @@ async function timetable(sql,kind,id,period,forcedDate,label) {
   const date=forcedDate||periodDate(period,today,lessons);
   const title=label||id;
   const html=period==='week'?richScheduleWeek(lessons,forcedDate||today,title,kind):richScheduleDay(lessons,date,title,kind);
-  return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today)};
+  return {html,reply_markup:scheduleKeyboard(kind,id,date,url,today,period==='week'?'week':'day')};
 }
 function escapeText(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -133,9 +133,24 @@ export async function POST(request) {
     let content;
     let editId=null;
     if(callback) {
-      await telegram('answerCallbackQuery',{callback_query_id:callback.id});
       const menu=parseMenuCallback(callback.data);
+      const weekAction=parseWeekCallback(callback.data);
+      await telegram('answerCallbackQuery',{
+        callback_query_id:callback.id,
+        ...(weekAction?{text:'Открываю неделю'}:{})
+      });
       if(menu==='find'||menu==='group'||menu==='teacher') {
+        // After a new search, old day/week controls must not navigate an old selection.
+        if(callback.message?.message_id) {
+          try {
+            await telegram('editMessageReplyMarkup',{
+              chat_id:chat.id,message_id:callback.message.message_id,
+              reply_markup:{inline_keyboard:[]}
+            });
+          }catch(error) {
+            console.warn('Unable to clear old schedule buttons:',error?.status||'unknown');
+          }
+        }
         await prompt(chat.id,menu==='find'?'auto':menu);
         return ok();
       }
@@ -150,12 +165,14 @@ export async function POST(request) {
       }
       else {
         const day=parseCallbackData(callback.data);
-        const week=parseWeekCallback(callback.data);
+        const week=weekAction;
         if(!day&&!week) return ok();
         const choice=day||week;
         content=await timetable(db(),choice.kind,choice.id,week?'week':'today',day?.date||week?.date||null,choice.id);
       }
-      if(callback.message?.message_id) editId=callback.message.message_id;
+      // Weekly output is a new Rich Message with a dedicated weekly keyboard.
+      // Re-editing the old day/menu message can appear as an ignored tap in clients.
+      if(!weekAction&&callback.message?.message_id) editId=callback.message.message_id;
     } else if(typeof message?.text==='string') {
       let parsed=parseBotCommand(message.text);
       // The ForceReply prompt identifies the kind without user accounts or server-side state.

@@ -35,6 +35,6 @@ test('catalog hides only recently confirmed empty cached schedules, not pending 
 test('Telegram navigation clearly names selection',()=>{
  assert.equal(menuKeyboard().inline_keyboard[0][0].text,'Выбрать расписание');
  const rows=scheduleKeyboard('group','Дг-304','2026-11-09').inline_keyboard;
- assert.equal(rows[1][1].text,'Сменить расписание');
+ assert.equal(rows[1][1].text,'Другое расписание');
  assert.equal(rows[1][1].callback_data,'m|find');
 });

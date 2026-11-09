@@ -97,14 +97,36 @@ export function menuKeyboard(site=BOT_SITE) {
     [btn('Открыть приложение','globe',{web_app:{url:site}},'success')]
   ]};
 }
-export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg()) {
-  const prev=callbackData(kind,id,shiftISO(date,-1));
-  const next=callbackData(kind,id,shiftISO(date,1));
-  const week=weekCallbackData(kind,id,date);
+/** Different controls for day and week; never show a no-op Week button on a week. */
+export function scheduleKeyboard(kind,id,date,site=BOT_SITE,today=todayYekaterinburg(),mode='day') {
   const rows=[];
-  if(prev&&next) rows.push([btn('← День','back',{callback_data:prev}),btn('День →','next',{callback_data:next})]);
-  if(week) rows.push([btn('Неделя','list',{callback_data:week}),btn('Сменить расписание','search',{callback_data:'m|find'})]);
-  rows.push([btn('Приложение','globe',{web_app:{url:site}},'success')]);
+  if(mode==='week') {
+    const anchor=startOfWeek(date);
+    const prev=weekCallbackData(kind,id,shiftISO(anchor,-7));
+    const next=weekCallbackData(kind,id,shiftISO(anchor,7));
+    const day=callbackData(kind,id,anchor);
+    if(prev&&next) rows.push([
+      btn('Пред. неделя','back',{callback_data:prev}),
+      btn('След. неделя','next',{callback_data:next})
+    ]);
+    if(day) rows.push([
+      btn('К понедельнику','calendar',{callback_data:day}),
+      btn('Другое расписание','search',{callback_data:'m|find'})
+    ]);
+  } else {
+    const prev=callbackData(kind,id,shiftISO(date,-1));
+    const next=callbackData(kind,id,shiftISO(date,1));
+    const week=weekCallbackData(kind,id,date);
+    if(prev&&next) rows.push([
+      btn('Пред. день','back',{callback_data:prev}),
+      btn('След. день','next',{callback_data:next})
+    ]);
+    if(week) rows.push([
+      btn('Неделя','list',{callback_data:week}),
+      btn('Другое расписание','search',{callback_data:'m|find'})
+    ]);
+  }
+  rows.push([btn('Открыть приложение','globe',{web_app:{url:site}},'success')]);
   return {inline_keyboard:rows};
 }
 export function greeting(site=BOT_SITE) {

@@ -54,7 +54,7 @@ test('schedule navigation and weekly callback are under 64 UTF8 bytes',()=>{
  assert.deepEqual(parseWeekCallback(callback),{kind:'group',id:'Дг-304'});
  assert.equal(weekCallbackData('group','А'.repeat(80)),null);
  const keys=scheduleKeyboard('group','Дг-304','2026-11-09');
- assert.equal(keys.inline_keyboard[0][0].text,'← День');
+ assert.equal(keys.inline_keyboard[0][0].text,'Пред. день');
  assert.equal(keys.inline_keyboard[1][0].text,'Неделя');
  for(const item of keys.inline_keyboard.flat()) if(item.callback_data) assert.ok(Buffer.byteLength(item.callback_data)<65);
 });
