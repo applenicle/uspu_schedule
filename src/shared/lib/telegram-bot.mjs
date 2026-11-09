@@ -10,14 +10,16 @@ export const isTeacherQuery = query => !/\d/u.test(String(query)) && /[А-Яа-�
 /** Stateless parsing: no account, local bot profile or collection of chat IDs. */
 export function parseBotCommand(input = '') {
   const text = String(input).trim().slice(0, 200);
-  if (!text || /^(меню|расписание|\/start|\/help)$/iu.test(text)) return {type:'help'};
-  const match = text.match(/^\/(start|help|group|teacher|today|tomorrow|week)(?:@\w+)?(?:\s+([\s\S]*))?$/iu);
+  if (!text || /^(меню|расписание|\/start|\/menu)$/iu.test(text)) return {type:'help'};
+  if (/^\/(?:help|commands)(?:@\w+)?$/iu.test(text)) return {type:'instructions'};
+  const match = text.match(/^\/(start|help|menu|commands|search|group|teacher|today|tomorrow|week)(?:@\w+)?(?:\s+([\s\S]*))?$/iu);
   if (match) {
     const command = match[1].toLowerCase();
     const query = (match[2] || '').trim();
-    if (['start','help'].includes(command)) return {type:'help'};
+    if (['start','menu'].includes(command)) return {type:'help'};
+    if (['help','commands'].includes(command)) return {type:'instructions'};
     if (!query) return {type:'missing',command};
-    return {type:'schedule',kind:command==='teacher'?'teacher':'group', period:command==='tomorrow'?'tomorrow':command==='week'?'week':command==='group'?'next':'today', query};
+    return {type:'schedule',kind:command==='search'?(isTeacherQuery(query)?'teacher':'group'):command==='teacher'?'teacher':'group', period:command==='tomorrow'?'tomorrow':command==='week'?'week':['group','search'].includes(command)?'next':'today', query};
   }
   if (/^\//u.test(text)) return {type:'help'};
   const teacher = text.match(/^(?:преподаватель|препод)\s*[:–-]?\s+(.+)$/iu);

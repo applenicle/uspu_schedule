@@ -40,7 +40,7 @@ test('rich week keeps uppercase day headers and no invented subgroup numbers',()
  const data=[{date:'2026-11-09',time:'10:15 - 11:45',subject:'Дизайн',type:'Лабораторная',room:'301',teacher:'А',subgroup:''},
  {date:'2026-11-09',time:'10:15 - 11:45',subject:'Дизайн',type:'Лабораторная',room:'302',teacher:'Б',subgroup:''}];
  const output=richScheduleWeek(data,'2026-11-09','ДГ-304');
- assert.match(output,/<h2><mark>ПОНЕДЕЛЬНИК/);
+ assert.match(output,/<h2>ПОНЕДЕЛЬНИК/);
  assert.doesNotMatch(output,/номера подгрупп не указаны/);
  assert.doesNotMatch(output,/1 подгруппа/);
 });

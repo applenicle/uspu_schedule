@@ -40,13 +40,13 @@ export async function GET(request) {
     }
     const items = await sql`
       SELECT id, label FROM catalog
-      WHERE kind = ${kind} AND label ILIKE ${like}
+      WHERE kind = ${kind} AND label ILIKE ${like} ESCAPE '!'
         AND (kind = 'room' OR NOT EXISTS (
           SELECT 1 FROM schedules s
           WHERE s.kind = catalog.kind AND s.id = catalog.id AND s.exam = false
             AND s.fetched_at > now() - interval '12 hours'
             AND jsonb_array_length(s.payload) = 0
-        )) ESCAPE '!'
+        ))
       ORDER BY CASE WHEN lower(label) = lower(${q}) THEN 0 ELSE 1 END, label
       LIMIT 50
     `;

@@ -16,6 +16,7 @@ export function CatalogSearch({kind, demo, favorites, onSelect, onClose, initial
   const [items,setItems] = useState([]);
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState('');
+  const [retry,setRetry] = useState(0);
   const inputRef = useRef(null);
   // Do not open the mobile keyboard automatically: it can cover the search field
   // in Telegram's embedded browser. The user taps the field, fixed near the top.
@@ -54,7 +55,7 @@ export function CatalogSearch({kind, demo, favorites, onSelect, onClose, initial
       finally {if(!controller.signal.aborted)setLoading(false);}
     },230);
     return ()=>{clearTimeout(timer);controller.abort();};
-  },[activeKind,query,tab,demo]);
+  },[activeKind,query,tab,demo,retry]);
   const visibleFavorites=favoritesForKind(favorites,activeKind);
   return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&onClose()}>
     <section className="search-modal" role="dialog" aria-modal="true" aria-label="Поиск расписания">
@@ -66,7 +67,7 @@ export function CatalogSearch({kind, demo, favorites, onSelect, onClose, initial
       <div className="search-mode"><button className={tab==='search'?'active':''} onClick={()=>setTab('search')}><Search size={17}/>Поиск</button><button className={tab==='favorites'?'active':''} onClick={()=>setTab('favorites')}><Bookmark size={17}/>Избранное</button></div>
       {tab==='search'?<>
         <label className="search-field"><Search size={21} aria-hidden="true"/><input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} autoComplete="off" autoCorrect="off" spellCheck={false} aria-label={`Найти ${NAMES[activeKind]}`} placeholder={activeKind==='group'?'Например, ДГ-304':activeKind==='teacher'?'Фамилия преподавателя':'Номер или корпус'}/>{query&&<button onClick={()=>setQuery('')} aria-label="Очистить поиск"><X size={18}/></button>}</label>
-        <p className="search-hint" role="status">{loading?'Идёт поиск…':error || `${items.length} ${items.length===1?'результат':'результатов'}`}</p>
+        <p className="search-hint" role="status">{loading?'Идёт поиск…':error ? <>{error} <button type="button" className="search-retry" onClick={()=>setRetry(x=>x+1)}>Повторить</button></> : `${items.length} ${items.length===1?'результат':'результатов'}`}</p>
         <div className="results-list">{items.map(item=><button className="result" key={`${item.kind}:${item.id}`} onClick={()=>onSelect(item)}><span>{item.label}</span><ArrowRight size={18}/></button>)}
         {!items.length&&!loading&&!error&&<div className="empty-small">Ничего не найдено</div>}</div>
       </>:<div className="results-list">{visibleFavorites.length?visibleFavorites.map(item=><button className="result" key={`${item.kind}:${item.id}`} onClick={()=>onSelect(item)}><span>{item.label}<small>{item.kind==='group'?'Группа':item.kind==='teacher'?'Преподаватель':'Аудитория'}</small></span><ArrowRight size={18}/></button>):<div className="empty-small">{`В избранном пока нет ${activeKind==='group'?'групп':activeKind==='teacher'?'преподавателей':'аудиторий'}`}</div>}</div>}

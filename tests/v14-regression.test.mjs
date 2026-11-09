@@ -7,10 +7,10 @@ const read = path => readFileSync(new URL(path,import.meta.url),'utf8');
 
 const base={date:'2026-11-09',subject:'Проектирование',time:'10:15 - 11:45',type:'Лабораторная',room:'11-313 УК М9',group:'Дг-304'};
 
-test('marked day headings and per-time rich blocks survive multi-slot schedule',()=>{
+test('plain day headings and per-time rich blocks survive multi-slot schedule',()=>{
  const lessonData=['10:15 - 11:45','12:00 - 13:30','14:15 - 15:45'].map(time=>({...base,time,teacher:'Шмакова Лариса Евгеньевна',subgroup:''}));
  const output=richScheduleWeek(lessonData,base.date,'Дг-304');
- assert.match(output,/<h2><mark>ПОНЕДЕЛЬНИК/);
+ assert.match(output,/<h2>ПОНЕДЕЛЬНИК/);
  assert.equal((output.match(/<blockquote>/g)||[]).length,3);
  for(const time of ['10:15–11:45','12:00–13:30','14:15–15:45']) assert.match(output,new RegExp(time));
  assert.doesNotMatch(output,/номера подгрупп не указаны|Параллельное занятие/);
@@ -31,8 +31,8 @@ test('real subgroup ids remain visible next to the correct teacher',()=>{
   {...base,teacher:'Шмакова',subgroup:'1'},
   {...base,teacher:'Ченушкина',subgroup:'2'}
  ],base.date,'Дг-304');
- assert.match(output,/<mark>1 подгруппа<\/mark>/);
- assert.match(output,/<mark>2 подгруппа<\/mark>/);
+ assert.match(output,/<b>1 подгруппа<\/b>/);
+ assert.match(output,/<b>2 подгруппа<\/b>/);
 });
 
 test('teacher choice callback validates IDs and has direct schedule handler',()=>{

@@ -44,7 +44,7 @@ function lessonBlock(card, kind) {
   const subject = esc(main.subject || 'Занятие');
   const meta = items.map(item => {
     // In source HTML, "Подгруппа: 0" is unspecified; don't assign numbers.
-    const subgroup = item.subgroup ? `<mark>${esc(item.subgroup)} подгруппа</mark><br/>` : '';
+    const subgroup = item.subgroup ? `<b>${esc(item.subgroup)} подгруппа</b><br/>` : '';
     const name = kind === 'teacher' ? item.group : item.teacher;
     const glyph = kind === 'teacher' ? 'group' : 'teacher';
     const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';
@@ -57,7 +57,7 @@ function lessonBlock(card, kind) {
 }
 
 function dayHeading(day) {
-  return `<h2><mark>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</mark></h2>`;
+  return `<h2>${esc(fullDate(day).toLocaleUpperCase('ru-RU'))}</h2>`;
 }
 
 export function richScheduleDay(lessons, day, title='', kind='group', {compact=false}={}) {
@@ -104,13 +104,21 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
 
 export function richGreeting() {
   return `<h2>${richEmoji('calendar')} Расписание УрГПУ</h2>`+
-    `<p>Отправь группу или фамилию преподавателя — например, <code>дг304</code> или <code>Иванова</code>.</p>`;
+    `<p>Выбери расписание в меню или сразу отправь группу или фамилию преподавателя.</p>`+
+    `<p>Например: <code>дг304</code> или <code>Шмакова</code>.</p>`;
 }
 
 export function richHelp() {
   return `<h2>${richEmoji('help')} Поиск расписания</h2>`+
-    `<p>Напиши название группы или ФИО преподавателя. В меню есть один поиск для всех.</p>`+
-    `<p>Также доступны команды <code>/today ДГ-304</code>, <code>/week ДГ-304</code> и <code>/teacher Иванова</code>.</p>`;
+    `<p>Отправь <code>дг304</code> или <code>Шмакова</code> — бот найдёт группу или преподавателя.</p>`+
+    `<p><b>Команды</b></p>`+
+    `<ul><li><code>/search</code> — выбор расписания</li>`+
+    `<li><code>/group ДГ-304</code> — группа</li>`+
+    `<li><code>/teacher Шмакова</code> — преподаватель</li>`+
+    `<li><code>/today ДГ-304</code> — сегодня</li>`+
+    `<li><code>/tomorrow ДГ-304</code> — завтра</li>`+
+    `<li><code>/week ДГ-304</code> — неделя</li>`+
+    `<li><code>/start</code> — главное меню</li></ul>`;
 }
 
 export function richNotice(title,message) {

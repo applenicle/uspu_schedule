@@ -164,8 +164,9 @@ export async function POST(request) {
       else if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
       else if(repliedTo.startsWith('Поиск группы') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
       if(parsed.type==='help') content={html:richGreeting(),reply_markup:menuKeyboard(origin())};
+      else if(parsed.type==='instructions') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parsed.type==='missing') {
-        await prompt(chat.id,parsed.command==='teacher'?'teacher':'group');
+        await prompt(chat.id,parsed.command==='search'?'auto':parsed.command==='teacher'?'teacher':'group');
         return ok();
       } else {
         const sql=db();
