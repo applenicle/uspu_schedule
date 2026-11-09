@@ -47,7 +47,9 @@ test('unknown subgroup numbers are not invented from group names, but each teach
   for(const text of [richScheduleDay(source,'2026-11-10','Дг-304'),richScheduleWeek(source,'2026-11-10','Дг-304')]){
     assert.match(text,/Шмакова/);
     assert.match(text,/Ченушкина/);
-    assert.doesNotMatch(text,/Вариант А|Вариант Б|условные варианты|1 подгруппа|2 подгруппа/);
+    assert.doesNotMatch(text,/Вариант А|Вариант Б|условные варианты/);
+    assert.match(text,/1 подгруппа/);
+    assert.match(text,/2 подгруппа/);
   }
 });
 

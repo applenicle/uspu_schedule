@@ -653,3 +653,19 @@ a {color:var(--blue)}
 @media (min-width:900px) and (max-width:1050px) {
   .schedule-view .week-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
 }
+
+/* v21: consistent subgroup label rhythm in all mobile and desktop cards. */
+.lesson-card .subgroup {min-width:0;padding:11px 0 8px;}
+.lesson-card .subgroup:first-child {padding-top:5px;}
+.lesson-card .subgroup-index {
+  display:inline-flex;align-items:center;max-width:100%;margin:0 0 4px;
+  padding:4px 9px;font-size:13px;line-height:1.35;font-weight:600;
+  background:color-mix(in srgb,var(--lesson-accent) 16%,var(--lesson-bg));
+}
+.lesson-card .subgroup-meta {display:flex;flex-direction:column;align-items:stretch;gap:1px;min-width:0;}
+.lesson-card .subgroup-meta .inline-person,
+.lesson-card .subgroup-meta .inline-room {
+  align-self:flex-start;justify-content:flex-start;text-align:left;
+  margin:0;max-width:100%;min-width:0;overflow-wrap:break-word;word-break:normal;
+}
+.lesson-card .subgroup-meta .inline-room span {text-align:left;overflow-wrap:break-word;word-break:normal;}

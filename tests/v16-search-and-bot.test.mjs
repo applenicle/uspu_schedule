@@ -27,7 +27,7 @@ test('help lists discoverable commands; rich message has no marked background',(
   assert.match(richHelp(),/\/search/);
   assert.match(richHelp(),/\/teacher/);
   assert.match(richHelp(),/\/week/);
-  assert.match(richGreeting(),/Выбери расписание/);
+  assert.match(richGreeting(),/Как пользоваться/);
   const rows = [
     {date:'2026-11-09',time:'10:15 - 11:45',subject:'Графика',type:'Лабораторная',teacher:'Иванова',room:'101',subgroup:'1'},
     {date:'2026-11-09',time:'10:15 - 11:45',subject:'Графика',type:'Лабораторная',teacher:'Смирнова',room:'102',subgroup:'2'},

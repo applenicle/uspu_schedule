@@ -14,7 +14,7 @@ test('one unified Telegram search accepts group or teacher without a separate me
  assert.equal(parseBotCommand('преподаватель Шмакова').kind,'teacher');
  assert.equal(parseBotCommand('/group ДГ304').kind,'group');
  assert.equal(isTeacherQuery('ПИ-301'),false);
- assert.match(richGreeting(),/группу или фамилию/);
+ assert.match(richGreeting(),/группы или ФИО преподавателя/);
 });
 test('webhook uses a unified force-reply prompt; older callbacks remain accepted',()=>{
  const webhook=read('../src/app/api/telegram/webhook/route.js');
@@ -42,7 +42,8 @@ test('rich week keeps uppercase day headers and no invented subgroup numbers',()
  const output=richScheduleWeek(data,'2026-11-09','ДГ-304');
  assert.match(output,/<h2>ПОНЕДЕЛЬНИК/);
  assert.doesNotMatch(output,/номера подгрупп не указаны/);
- assert.doesNotMatch(output,/1 подгруппа/);
+ assert.match(output,/1 подгруппа/);
+ assert.match(output,/2 подгруппа/);
 });
 
 test('weekly message keeps identical subjects at separate times for easy subgroup tracking',()=>{

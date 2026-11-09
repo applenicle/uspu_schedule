@@ -8,7 +8,7 @@ const base={date:'2026-11-10',time:'10:15 - 11:45',subject:'Веб-дизайн'
 const second={...base,teacher:'Ченушкина Светлана Владимировна'};
 const read=name=>readFileSync(new URL(name,import.meta.url),'utf8');
 
-test('parallel lessons keep both teachers without fictional variants or subgroup numbers',()=>{
+test('parallel lessons keep both teachers and use stable display numbering in group view',()=>{
  const first=lessonsToCards([base,second],base.date)[0].items;
  const reversed=lessonsToCards([second,base],base.date)[0].items;
  assert.deepEqual(first.map(item=>item.teacher),reversed.map(item=>item.teacher));
@@ -17,7 +17,8 @@ test('parallel lessons keep both teachers without fictional variants or subgroup
  const day=richScheduleDay([base,second],base.date,'ДГ-304');
  assert.match(day,/Ченушкина/);
  assert.match(day,/Шмакова/);
- assert.doesNotMatch(day,/[12] подгруппа/);
+ assert.match(day,/1 подгруппа/);
+ assert.match(day,/2 подгруппа/);
  assert.doesNotMatch(day,/Вариант|условные варианты/);
  assert.doesNotMatch(richScheduleWeek([base,second],base.date,'ДГ-304'),/Вариант|условные варианты/);
 });

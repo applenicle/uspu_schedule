@@ -109,9 +109,9 @@ async function sendRich(chatId,content,editId) {
 }
 /** One /start reply installs the keyboard. Telegram keeps it for later messages. */
 async function welcome(chatId) {
-  return safeTelegram('sendMessage',{
+  return safeTelegram('sendRichMessage',{
     chat_id:chatId,
-    text:'Расписание УрГПУ\n\nНапиши группу (ДГ-304) или фамилию преподавателя (Шмакова).',
+    rich_message:{html:richGreeting()},
     reply_markup:replyKeyboard(origin())
   });
 }
@@ -120,7 +120,7 @@ async function prompt(chatId,kind) {
   const isTeacher=kind==='teacher';
   await telegram('sendMessage',{
     chat_id:chatId,
-    text:kind==='auto'?'Какое расписание показать?\nНапиши группу или фамилию преподавателя.':isTeacher?
+    text:kind==='auto'?'Введи название группы или ФИО преподавателя:':isTeacher?
       'Напиши фамилию преподавателя.':'Напиши название группы.',
     reply_markup:{force_reply:true,input_field_placeholder:kind==='auto'?'ДГ-304 или Иванова':isTeacher?'Фамилия Имя Отчество':'Например, дг304',selective:true}
   });
@@ -191,9 +191,9 @@ export async function POST(request) {
       let parsed=parseBotCommand(message.text);
       // The ForceReply prompt identifies the kind without user accounts or server-side state.
       const repliedTo=message.reply_to_message?.text||'';
-      if((repliedTo.startsWith('Поиск расписания')||repliedTo.startsWith('Какое расписание')) && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
-      else if(repliedTo.startsWith('Поиск преподавателя') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
-      else if(repliedTo.startsWith('Поиск группы') && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
+      if((repliedTo.startsWith('Поиск расписания')||repliedTo.startsWith('Какое расписание')||repliedTo.startsWith('Введи название группы или ФИО преподавателя')) && !message.text.startsWith('/')) parsed=parseBotCommand(message.text);
+      else if((repliedTo.startsWith('Поиск преподавателя')||repliedTo.startsWith('Введи ФИО преподавателя')) && !message.text.startsWith('/')) parsed={type:'schedule',kind:'teacher',period:'today',query:message.text.trim()};
+      else if((repliedTo.startsWith('Поиск группы')||repliedTo.startsWith('Введи название группы')) && !message.text.startsWith('/')) parsed={type:'schedule',kind:'group',period:'next',query:message.text.trim()};
       if(parsed.type==='help') {await welcome(chat.id);return ok();}
       else if(parsed.type==='instructions') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parsed.type==='missing') {

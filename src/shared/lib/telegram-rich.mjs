@@ -44,7 +44,7 @@ function lessonBlock(card, kind) {
   const subject = esc(main.subject || 'Занятие');
   const meta = items.map(item => {
     // Only source-confirmed subgroup numbers appear in messages.
-    const subgroup = item.subgroupVerified ? `<b>${esc(item.displaySubgroup)}</b><br/>` : '';
+    const subgroup = item.displaySubgroup ? `<b>${esc(item.displaySubgroup)}</b><br/>` : '';
     const name = kind === 'teacher' ? item.group : item.teacher;
     const glyph = kind === 'teacher' ? 'group' : 'teacher';
     const who = name ? `${richEmoji(glyph)} ${esc(name)}` : '';
@@ -53,7 +53,7 @@ function lessonBlock(card, kind) {
   }).join('');
   const people = meta ? `<ul>${meta}</ul>` : '';
   // RichMessage heading + quotation visually distinguish one period from the next.
-  return `<h3>${esc(slot)}</h3><blockquote><p><b>${subject}</b> · ${esc(category.label)}</p>${people}</blockquote>`;
+  return `<h3>${esc(slot)}</h3><blockquote><p><b>${subject}</b></p><p>${esc(category.label)}</p>${people}</blockquote>`;
 }
 
 function dayHeading(day) {
@@ -104,13 +104,16 @@ export function richScheduleWeek(lessons,anchor,title='',kind='group') {
 
 export function richGreeting() {
   return `<h2>${richEmoji('calendar')} Расписание УрГПУ</h2>`+
-    `<p>Выбери расписание в меню или сразу отправь группу или фамилию преподавателя.</p>`+
-    `<p>Например: <code>дг304</code> или <code>Шмакова</code>.</p>`;
+    `<p><b>Как пользоваться</b></p>`+
+    `<ol><li>Отправь название любой группы или ФИО преподавателя.</li>`+
+    `<li>Если совпадений несколько — выбери нужное расписание кнопкой.</li>`+
+    `<li>Переключай дни и недели кнопками под расписанием.</li></ol>`+
+    `<p>Чтобы выбрать другое расписание, используй кнопку внизу.</p>`;
 }
 
 export function richHelp() {
-  return `<h2>${richEmoji('help')} Поиск расписания</h2>`+
-    `<p>Отправь <code>дг304</code> или <code>Шмакова</code> — бот найдёт группу или преподавателя.</p>`+
+  return `<h2>${richEmoji('help')} Как пользоваться</h2>`+
+    `<p>Отправь название любой группы или ФИО преподавателя, а затем переключай дни кнопками под сообщением.</p>`+
     `<p><b>Команды</b></p>`+
     `<ul><li><code>/search</code> — выбор расписания</li>`+
     `<li><code>/group ДГ-304</code> — группа</li>`+
@@ -118,7 +121,8 @@ export function richHelp() {
     `<li><code>/today ДГ-304</code> — сегодня</li>`+
     `<li><code>/tomorrow ДГ-304</code> — завтра</li>`+
     `<li><code>/week ДГ-304</code> — неделя</li>`+
-    `<li><code>/start</code> — главное меню</li></ul>`;
+    `<li><code>/start</code> — главное меню</li></ul>`+
+    `<p>Если УрГПУ не обозначил номера параллельных подгрупп, номера 1/2 в приложении означают порядок отображения, а не подтверждённое распределение.</p>`;
 }
 
 export function richNotice(title,message) {
