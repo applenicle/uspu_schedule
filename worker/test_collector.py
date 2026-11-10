@@ -44,6 +44,25 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual([r['subgroup'] for r in rows], ['1', '2'])
         self.assertEqual([r['room'] for r in rows], ['ГУК: 301', 'ГУК: 303'])
 
+    def test_visible_group_subgroup_wins_over_comment_zero(self):
+        html = '''<div class="rasp-item"><span class="rasp-day">10 ноября</span>
+        <div class="rasp-para"><span class="para-time">10:15 - 11:45</span>
+        <div class="rasp-desc"><p>Веб-дизайн (Лаб.зан-я)<br>
+        <span><!--Подгруппа: 0<br>-->Учебная аудитория 11-313 УК М9<br>
+        Преподаватель: Ченушкина Светлана Владимировна<br>
+        Группа: Дг-304 подгруппа 1</span></p></div></div>
+        <div class="rasp-para"><span class="para-time">10:15 - 11:45</span>
+        <div class="rasp-desc"><p>Веб-дизайн (Лаб.зан-я)<br>
+        <span><!--Подгруппа: 0<br>-->Учебная аудитория 11-313 УК М9<br>
+        Преподаватель: Шмакова Лариса Евгеньевна<br>
+        Группа: Дг-304 подгруппа 2</span></p></div></div></div>'''
+        rows, _ = parse_lessons(html, date(2026, 11, 10))
+        self.assertEqual(len(rows), 2)
+        by_teacher = {row['teacher']: row for row in rows}
+        self.assertEqual(by_teacher['Ченушкина Светлана Владимировна']['subgroup'], '1')
+        self.assertEqual(by_teacher['Шмакова Лариса Евгеньевна']['subgroup'], '2')
+        self.assertEqual({row['group'] for row in rows}, {'Дг-304'})
+
     def test_subgroup_zero_does_not_add_a_label(self):
         html = '''<div class="rasp-item"><span class="rasp-day">09 ноября</span>
         <div class="rasp-para"><span class="para-time">10:15 - 11:45</span>

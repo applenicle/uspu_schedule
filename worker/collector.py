@@ -121,15 +121,20 @@ def parse_lessons(html: str, reference: date | None = None) -> tuple[list[dict],
             lesson_type = kind_match.group(2).strip() if kind_match else ''
             entry = {'date': iso, 'time': time_str, 'subject': subject,
                      'type': lesson_type, 'room': '', 'teacher': '', 'group': '', 'subgroup': ''}
-            # USPU often writes subgroup IDs in HTML comments, e.g.
-            # <!--Подгруппа: 1<br>-->; normal text extraction would drop them.
-            comments = ' '.join(str(c) for c in desc_node.find_all(string=lambda s: isinstance(s, Comment)))
-            subgroup_source = comments + ' ' + ' '.join(lines)
-            subgroup_match = re.search(r'подгрупп[а-яё]*\s*[:№-]?\s*(\d+)', subgroup_source, re.I)
-            if not subgroup_match:
-                subgroup_match = re.search(r'(\d+)\s*[-–]?(?:я|ая|ая\s+)?\s*подгрупп', subgroup_source, re.I)
-            if subgroup_match and subgroup_match.group(1) != '0':
-                entry['subgroup'] = subgroup_match.group(1)
+            # USPU sometimes supplies a placeholder "Подгруппа: 0" in an HTML
+            # comment while the visible group line contains the real subgroup,
+            # e.g. "Группа: Дг-304 подгруппа 1". Looking at comments first
+            # would match 0 and silently discard the real number.
+            subgroup_re = re.compile(r'подгрупп[а-яё]*\s*[:№-]?\s*(\d+)', re.I)
+            visible_text = ' '.join(lines)
+            comments = ' '.join(str(c) for c in para.find_all(string=lambda s: isinstance(s, Comment)))
+            # Prefer visible labels. Ignore placeholder zero but keep looking.
+            for source_text in (visible_text, comments):
+                numbers = [m.group(1) for m in subgroup_re.finditer(source_text)
+                           if int(m.group(1)) > 0]
+                if numbers:
+                    entry['subgroup'] = numbers[0]
+                    break
             leftover = []
             for line in lines:
                 prefix, _, value = line.partition(':')
@@ -137,7 +142,10 @@ def parse_lessons(html: str, reference: date | None = None) -> tuple[list[dict],
                 if key.startswith('преподавател'):
                     entry['teacher'] = normalize(value)
                 elif key.startswith('группа') or key.startswith('группы'):
-                    entry['group'] = normalize(value)
+                    # A subgroup number is metadata, not part of the group ID.
+                    group_label = re.sub(r'\s+подгрупп[а-яё]*\s*[:№-]?\s*\d+\s*$',
+                                         '', normalize(value), flags=re.I)
+                    entry['group'] = normalize(group_label)
                 elif key.startswith('аудитори') or key.startswith('кабинет'):
                     entry['room'] = normalize(value)
                 elif not key.startswith('подгрупп'):
