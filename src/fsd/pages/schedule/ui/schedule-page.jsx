@@ -67,7 +67,7 @@ export function SchedulePage() {
       const data=await getSchedule(selected.kind,selected.id,signal);
       if(signal?.aborted)return;
       const list=data.lessons||[];
-      setLessons(list);setPending(Boolean(data.pending||data.partial));setSourceUpdated(data.source_updated||'');
+      setLessons(list);setPending(Boolean(data.pending));setSourceUpdated(data.source_updated||'');
       if(data.pending&&selected.kind!=='room') requestSchedule(selected.kind,selected.id).catch(()=>{});
       if(list.length) setDay(prev=>prev===today?nearestTeachingDay(list,today):prev);
     }catch(err){if(!signal?.aborted) {setError(err.message);setLessons([]);}}
