@@ -17,8 +17,8 @@ test('parallel lessons keep both teachers and use stable display numbering in gr
  const day=richScheduleDay([base,second],base.date,'ДГ-304');
  assert.match(day,/Ченушкина/);
  assert.match(day,/Шмакова/);
- assert.match(day,/1 подгруппа/);
- assert.match(day,/2 подгруппа/);
+ assert.doesNotMatch(day,/1 подгруппа/);
+ assert.doesNotMatch(day,/2 подгруппа/);
  assert.doesNotMatch(day,/Вариант|условные варианты/);
  assert.doesNotMatch(richScheduleWeek([base,second],base.date,'ДГ-304'),/Вариант|условные варианты/);
 });

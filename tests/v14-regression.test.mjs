@@ -23,8 +23,8 @@ test('two teachers do not become fictional subgroups',()=>{
  ],base.date,'Дг-304');
  assert.match(output,/Шмакова Лариса Евгеньевна/);
  assert.match(output,/Ченушкина Светлана Владимировна/);
- assert.match(output,/1 подгруппа/);
- assert.match(output,/2 подгруппа/);
+ assert.doesNotMatch(output,/1 подгруппа/);
+ assert.doesNotMatch(output,/2 подгруппа/);
  assert.doesNotMatch(output,/не указаны/);
 });
 

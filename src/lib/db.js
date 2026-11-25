@@ -1,9 +1,4 @@
-import { neon } from '@neondatabase/serverless';
-
-export function db() {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured');
-  return neon(process.env.DATABASE_URL);
-}
+export function db() { throw new Error("Legacy database access disabled in snapshot mode"); }
 
 export function response(data, status = 200) {
   return Response.json(data, {

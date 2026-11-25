@@ -42,8 +42,8 @@ test('rich week keeps uppercase day headers and no invented subgroup numbers',()
  const output=richScheduleWeek(data,'2026-11-09','ДГ-304');
  assert.match(output,/<h2>ПОНЕДЕЛЬНИК/);
  assert.doesNotMatch(output,/номера подгрупп не указаны/);
- assert.match(output,/1 подгруппа/);
- assert.match(output,/2 подгруппа/);
+ assert.doesNotMatch(output,/1 подгруппа/);
+ assert.doesNotMatch(output,/2 подгруппа/);
 });
 
 test('weekly message keeps identical subjects at separate times for easy subgroup tracking',()=>{

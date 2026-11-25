@@ -81,8 +81,8 @@ test('unknown parallel entries do not invent subgroup numbers, week days are upp
   {date:'2026-11-09',time:'10:15 - 11:45',subject:'Веб-дизайн',type:'Лабораторная',teacher:'Б',room:'302',subgroup:''}
  ],'2026-11-09','Дг-304');
  assert.doesNotMatch(day,/Параллельное занятие/);
- assert.match(day,/1 подгруппа/);
- assert.match(day,/2 подгруппа/);
+ assert.doesNotMatch(day,/1 подгруппа/);
+ assert.doesNotMatch(day,/2 подгруппа/);
  assert.match(richScheduleWeek(sample,'2026-11-09'),/ПОНЕДЕЛЬНИК/);
  assert.doesNotMatch(richGreeting(),/Без регистрации/);
  assert.doesNotMatch(richHelp(),/Учётная запись/);

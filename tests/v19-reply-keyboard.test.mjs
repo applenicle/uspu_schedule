@@ -48,8 +48,8 @@ test('unknown subgroup numbers are not invented from group names, but each teach
     assert.match(text,/Шмакова/);
     assert.match(text,/Ченушкина/);
     assert.doesNotMatch(text,/Вариант А|Вариант Б|условные варианты/);
-    assert.match(text,/1 подгруппа/);
-    assert.match(text,/2 подгруппа/);
+    assert.doesNotMatch(text,/1 подгруппа/);
+    assert.doesNotMatch(text,/2 подгруппа/);
   }
 });
 

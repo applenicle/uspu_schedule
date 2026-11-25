@@ -35,7 +35,7 @@ test('webhook and preview API resolve the name from catalog for callbacks',()=>{
   const webhook=readFileSync(new URL('../src/app/api/telegram/webhook/route.js',import.meta.url),'utf8');
   const preview=readFileSync(new URL('../src/app/api/telegram/message/route.js',import.meta.url),'utf8');
   for(const text of [webhook,preview]) {
-    assert.match(text,/SELECT label FROM catalog WHERE kind='teacher' AND id=\$\{id\} LIMIT 1/u);
+    assert.match(text,/catalogItems\('teacher'\)\.filter\(x=>x.id===id\)/u);
     assert.match(text,/scheduleDisplayName\(/u);
   }
 });

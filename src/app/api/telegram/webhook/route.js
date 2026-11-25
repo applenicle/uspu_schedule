@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { db } from '@/lib/db';
+import { catalogItems, readSchedule } from '@/lib/snapshot.mjs';
 import { todayYekaterinburg } from '@/shared/lib/date';
 import { parseBotCommand, periodDate, parseCallbackData, parseWeekCallback, parseMenuCallback, menuKeyboard, replyKeyboard, replyShortcut, scheduleKeyboard, BOT_SITE, safeNormalizeGroup, parseTeacherChoiceData, teacherChoiceCallbackData, needsTeacherNameLookup, scheduleDisplayName } from '@/shared/lib/telegram-bot.mjs';
 import { richScheduleDay, richScheduleWeek, richGreeting, richHelp, richNotice, premiumButton, withoutPremium } from '@/shared/lib/telegram-rich.mjs';
@@ -52,20 +52,17 @@ async function findCatalog(sql,kind,input) {
   const query=input.trim().slice(0,120);
   if (kind==='group') {
     const normalized=safeNormalizeGroup(query);
-    const exact=await sql`
-      SELECT id,label FROM catalog WHERE kind='group'
-      AND regexp_replace(replace(upper(label),'Ё','Е'),'[-[:space:]_–—‑]','','g')=${normalized}
-      LIMIT 2`;
+    const exact=catalogItems('group').filter(x=>safeNormalizeGroup(x.label)===normalized).slice(0,2);
     if(exact.length===1) return {item:exact[0]};
     if(exact.length>1) return {choices:exact};
     return {notFound:true};
   }
   if (/^\d{1,15}$/.test(query)) {
-    const exact=await sql`SELECT id,label FROM catalog WHERE kind='teacher' AND id=${query} LIMIT 1`;
+    const exact=catalogItems('teacher').filter(x=>x.id===query).slice(0,1);
     return exact.length?{item:exact[0]}:{notFound:true};
   }
-  const surname=query.split(/\s+/u)[0].replace(/[!%_]/g,c=>'!'+c);
-  const rows=await sql`SELECT id,label FROM catalog WHERE kind='teacher' AND label ILIKE ${surname+'%'} ESCAPE '!' ORDER BY label LIMIT 40`;
+  const surname=query.split(/\s+/u)[0].toLocaleLowerCase('ru').replace(/ё/g,'е');
+  const rows=catalogItems('teacher').filter(x=>x.label.toLocaleLowerCase('ru').replace(/ё/g,'е').startsWith(surname)).slice(0,40);
   if(!rows.length) return {notFound:true};
   const match=uniqueTeacherMatch(query,rows);
   if(match) return {item:match};
@@ -75,24 +72,17 @@ async function findCatalog(sql,kind,input) {
 }
 
 async function timetable(sql,kind,id,period,forcedDate,label) {
-  // Save only an interested schedule, never the Telegram user's profile or chat ID.
-  await sql`INSERT INTO interests(kind,id,exam,requested_at) VALUES (${kind},${id},false,now())
-    ON CONFLICT(kind,id,exam) DO UPDATE SET requested_at=now()
-    WHERE interests.requested_at < now() - interval '5 minutes'`;
-  const rows=await sql`SELECT payload,source_updated FROM schedules WHERE kind=${kind} AND id=${id} AND exam=false LIMIT 1`;
+  const data=readSchedule(kind,id,false);
   const url=origin();
-  if(!rows.length) return {
-    html:richNotice('Расписание загружается','Сборщик получает данные УрГПУ. Повтори запрос немного позже.'),
-    reply_markup:menuKeyboard(url)
-  };
-  const lessons=Array.isArray(rows[0].payload)?rows[0].payload:[];
+  if(!data?.cached) return {html:richNotice('Расписание недоступно','УрГПУ пока не предоставил данные или первичный сбор ещё не завершён.'),reply_markup:menuKeyboard(url)};
+  const lessons=data.lessons;
   const today=todayYekaterinburg();
   const date=forcedDate||periodDate(period,today,lessons);
   // Calendar callbacks carry numeric teacher IDs, not display names.
   // Resolve the human-readable FIO every time a callback lacks its label.
   let catalogLabel='';
   if (needsTeacherNameLookup(kind,id,label)) {
-    const teacher=await sql`SELECT label FROM catalog WHERE kind='teacher' AND id=${id} LIMIT 1`;
+    const teacher=catalogItems('teacher').filter(x=>x.id===id).slice(0,1);
     catalogLabel=teacher[0]?.label || '';
   }
   const title=scheduleDisplayName(kind,id,label,catalogLabel);
@@ -173,7 +163,7 @@ export async function POST(request) {
       if(menu==='home') {await welcome(chat.id);return ok();}
       else if(menu==='help') content={html:richHelp(),reply_markup:menuKeyboard(origin())};
       else if(parseTeacherChoiceData(callback.data)) {
-        const sql=db();
+        const sql=null;
         const found=await findCatalog(sql,'teacher',parseTeacherChoiceData(callback.data));
         content=found.item
           ?await timetable(sql,'teacher',found.item.id,'next',null,found.item.label)
@@ -184,7 +174,7 @@ export async function POST(request) {
         const week=weekAction;
         if(!day&&!week) return ok();
         const choice=day||week;
-        content=await timetable(db(),choice.kind,choice.id,week?'week':'today',day?.date||week?.date||null,choice.id);
+        content=await timetable(null,choice.kind,choice.id,week?'week':'today',day?.date||week?.date||null,choice.id);
       }
       // Weekly output is a new Rich Message with a dedicated weekly keyboard.
       // Re-editing the old day/menu message can appear as an ignored tap in clients.
@@ -207,7 +197,7 @@ export async function POST(request) {
         await prompt(chat.id,parsed.command==='search'?'auto':parsed.command==='teacher'?'teacher':'group');
         return ok();
       } else {
-        const sql=db();
+        const sql=null;
         const found=await findCatalog(sql,parsed.kind,parsed.query);
         if(found.item) content=await timetable(sql,parsed.kind,found.item.id,parsed.period,null,found.item.label);
         else if(found.choices) {

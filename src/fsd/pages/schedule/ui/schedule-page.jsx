@@ -13,7 +13,7 @@ import { demoCatalog, demoLessons } from '@/shared/lib/demo-data.mjs';
 import { nearestTeachingDay } from '@/shared/lib/schedule-utils.mjs';
 import { normalizeGroup } from '@/shared/lib/schedule-utils.mjs';
 import { todayYekaterinburg } from '@/shared/lib/date';
-import { getSchedule, requestSchedule } from '@/entities/schedule/api/schedule-api';
+import { getSchedule } from '@/entities/schedule/api/schedule-api';
 import { queryCatalog } from '@/entities/catalog/api/catalog-api';
 import { teacherSurname, uniqueTeacherMatch } from '@/shared/lib/teacher.mjs';
 import { useDeviceTheme } from '@/features/theme-switch/model/use-device-theme';
@@ -32,6 +32,7 @@ export function SchedulePage() {
   const [loading,setLoading]=useState(false);
   const [pending,setPending]=useState(false);
   const [sourceUpdated,setSourceUpdated]=useState('');
+  const [partial,setPartial]=useState(false);
   const [error,setError]=useState('');
   const [dialog,setDialog]=useState(null);
   const [teacher,setTeacher]=useState('');
@@ -55,7 +56,7 @@ export function SchedulePage() {
 
   const load = useCallback(async (signal)=>{
     if(!selected) {setLessons([]);return;}
-    setLoading(true);setError('');setPending(false);
+    setLoading(true);setError('');setPending(false);setPartial(false);
     if(demo){
       const items=demoLessons(today, selected.kind, selected.id);
       setLessons(items);
@@ -67,8 +68,8 @@ export function SchedulePage() {
       const data=await getSchedule(selected.kind,selected.id,signal);
       if(signal?.aborted)return;
       const list=data.lessons||[];
-      setLessons(list);setPending(Boolean(data.pending));setSourceUpdated(data.source_updated||'');
-      if(data.pending&&selected.kind!=='room') requestSchedule(selected.kind,selected.id).catch(()=>{});
+      setPartial(Boolean(data.partial));
+      setLessons(list);setPending(Boolean(!data.cached && data.unavailable));setSourceUpdated(data.source_updated||'');
       if(list.length) setDay(prev=>prev===today?nearestTeachingDay(list,today):prev);
     }catch(err){if(!signal?.aborted) {setError(err.message);setLessons([]);}}
     finally{if(!signal?.aborted)setLoading(false);}
@@ -121,6 +122,7 @@ export function SchedulePage() {
       {selected ? <>
         <DateStrip selected={day} today={today} onSelect={setDay}/>
         {error&&<div className="error-banner" role="alert">{error}</div>}
+        {partial&&<div className="pending-label" role="status">Занятость аудитории по опубликованным занятиям. Отсутствие записи не гарантирует, что аудитория свободна.</div>}
         <ScheduleView lessons={lessons} selected={day} mode={kind} entityId={selected?.id} onTeacher={onTeacher}
           onGroup={group=>group&&resolveAndChoose('group',group)}
           onRoom={room=>room&&resolveAndChoose('room',room)} onDay={setDay}

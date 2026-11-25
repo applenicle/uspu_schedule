@@ -20,18 +20,18 @@ export function ScheduleView({lessons,selected,mode,entityId,onTeacher,onGroup,o
     <div className="section-title">
       <h2 className="mobile-day-title">{fullDate(selected)}</h2>
       <h2 className="desktop-week-title">{desktopMode==='week'?'Расписание недели':fullDate(selected)}</h2>
-      <span className="count-note mobile-day-title">{loading?'Загрузка…':`${cards.length} ${cards.length===1?'пара':cards.length>=2&&cards.length<=4?'пары':'пар'}`}</span>
+      <span className="count-note mobile-day-title">{loading?'Загрузка…':pending?'Нет данных':`${cards.length} ${cards.length===1?'пара':cards.length>=2&&cards.length<=4?'пары':'пар'}`}</span>
       <div className="desktop-schedule-actions">
-        <span className="count-note">{loading?'Загрузка…':`${desktopMode==='week'?weekTotal:cards.length} занятий`}</span>
+        <span className="count-note">{loading?'Загрузка…':pending?'Нет данных':`${desktopMode==='week'?weekTotal:cards.length} занятий`}</span>
         <div className="desktop-view-tabs" role="group" aria-label="Вид расписания">
           <button type="button" aria-pressed={desktopMode==='week'} onClick={()=>setDesktopMode('week')}>Неделя</button>
           <button type="button" aria-pressed={desktopMode==='day'} onClick={()=>setDesktopMode('day')}>День</button>
         </div>
       </div>
     </div>
-    {pending&&<div className="pending-label" role="status">Загружаем расписание. Оно появится автоматически.</div>}
+    {pending&&<div className="pending-label" role="status">Расписание пока недоступно.</div>}
     <div className="mobile-lessons">{loading?<div className="loading-label" role="status">Получаем занятия…</div>:
-      cards.length?cards.map(card=><LessonCard key={card.key} card={card} mode={mode} onTeacher={onTeacher} onGroup={onGroup} onRoom={onRoom}/>):pending?<div className="loading-label" role="status">Ждём обновления расписания. Данные появятся автоматически.</div>:<EmptyDay onNext={()=>onDay(shiftISO(selected,1))}/>}</div>
+      cards.length?cards.map(card=><LessonCard key={card.key} card={card} mode={mode} onTeacher={onTeacher} onGroup={onGroup} onRoom={onRoom}/>):pending?<div className="loading-label" role="status">УрГПУ не предоставил данные или первичный сбор ещё не завершён.</div>:<EmptyDay onNext={()=>onDay(shiftISO(selected,1))}/>}</div>
     <div className="week-grid" aria-label="Недельное расписание">
       {week.map(day=>{
         const ch=dateChip(day);

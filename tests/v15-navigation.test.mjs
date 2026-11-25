@@ -24,12 +24,10 @@ test('teacher and room labels are left aligned, not forced to the trailing edge'
  assert.match(cards,/<RoomButton room=\{main.room\}/);
 });
 
-test('catalog hides only recently confirmed empty cached schedules, not pending or forever',()=>{
+test('catalog reads the prebuilt snapshot',()=>{
  const api=read('../src/app/api/catalog/route.js');
- assert.match(api,/NOT EXISTS/);
- assert.match(api,/interval '12 hours'/);
- assert.match(api,/jsonb_array_length\(s.payload\) = 0/);
- assert.doesNotMatch(api,/DELETE FROM catalog/);
+ assert.match(api,/searchCatalog/);
+ assert.doesNotMatch(api,/db\(/);
 });
 
 test('Telegram navigation clearly names selection',()=>{

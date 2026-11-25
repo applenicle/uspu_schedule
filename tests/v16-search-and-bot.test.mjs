@@ -6,12 +6,10 @@ import {richGreeting, richHelp, richScheduleDay, richScheduleWeek} from '../src/
 
 const read = (path) => readFileSync(new URL(path,import.meta.url),'utf8');
 
-test('catalog SQL attaches ESCAPE to ILIKE, not a parenthesized expression',()=>{
-  const route=read('../src/app/api/catalog/route.js');
-  assert.match(route,/label ILIKE \${like} ESCAPE '!'/);
-  assert.doesNotMatch(route,/\)\) ESCAPE '!'/);
-  assert.match(route,/jsonb_array_length\(s\.payload\) = 0/);
-  assert.match(route,/interval '12 hours'/);
+test('catalog no longer constructs SQL',()=>{
+ const route=read('../src/app/api/catalog/route.js');
+ assert.match(route,/searchCatalog/);
+ assert.doesNotMatch(route,/ILIKE|db\(/);
 });
 
 test('telegram bot opens search command without demanding group or teacher first',()=>{
